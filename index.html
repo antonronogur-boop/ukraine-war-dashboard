@@ -3,107 +3,153 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orosz veszteségek – Ukrajna háború</title>
+<title>Orosz veszteségek Ukrajnában — ukrán vezérkari közlések alapján</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root {
   --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:rgba(255,255,255,0.08);
-  --text:#e8eaf0; --muted:#8b8fa8; --accent:#c0392b; --blue:#2980b9; --green:#27ae60; --yellow:#f39c12; --purple:#8e44ad;
+  --text:#e8eaf0; --muted:#8b8fa8; --accent:#c0392b;
+  --col-personnel:#c0392b; --col-tanks:#e74c3c; --col-afv:#e67e22;
+  --col-artillery:#f39c12; --col-uav:#27ae60; --col-planes:#3498db;
+  --col-heli:#9b59b6; --col-missiles:#1abc9c; --col-mlrs:#e74c3c;
+  --col-avg:rgba(255,255,255,0.75);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;}
-a{color:var(--blue);text-decoration:none;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:14px;}
+a{color:#3498db;text-decoration:none;}
 
 /* TOPBAR */
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:100;}
-.logo-text{font-size:15px;font-weight:600;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200;}
+.logo-wrap{}
+.logo-text{font-size:15px;font-weight:700;line-height:1.2;}
 .logo-sub{font-size:11px;color:var(--muted);margin-top:2px;}
-.topbar-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.day-badge{background:rgba(192,57,43,.15);border:1px solid rgba(192,57,43,.4);color:#e74c3c;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.day-badge{background:rgba(192,57,43,.18);border:1px solid rgba(192,57,43,.5);color:#e74c3c;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
 .updated{font-size:11px;color:var(--muted);}
+.btn-csv{background:rgba(52,152,219,.15);border:1px solid rgba(52,152,219,.4);color:#3498db;padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;}
+.btn-csv:hover{background:rgba(52,152,219,.28);}
 
-/* NAV TABS */
-.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:0;overflow-x:auto;}
-.nav-btn{background:none;border:none;color:var(--muted);padding:12px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
+/* DISCLAIMER BAR */
+.disclaimer-bar{background:rgba(180,130,0,0.12);border-bottom:1px solid rgba(180,130,0,0.35);padding:7px 24px;font-size:12px;color:#c8a84b;position:sticky;top:57px;z-index:190;line-height:1.4;}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:0;overflow-x:auto;position:sticky;top:93px;z-index:180;}
+.nav-btn{background:none;border:none;color:var(--muted);padding:12px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
 .nav-btn:hover{color:var(--text);}
 .nav-btn.active{color:var(--text);border-bottom-color:var(--accent);}
 
-/* MAIN */
-.main{padding:24px 28px;max-width:1400px;margin:0 auto;}
-.page{display:none;}
-.page.active{display:block;}
+/* CONTENT */
+.content{padding:20px 24px;max-width:1400px;margin:0 auto;}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
 
 /* CARDS */
-.section-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:24px;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;}
-.card.red::before{background:var(--accent);}
-.card.blue::before{background:var(--blue);}
-.card.green::before{background:var(--green);}
-.card.yellow::before{background:var(--yellow);}
-.card.purple::before{background:var(--purple);}
-.card-label{font-size:11px;color:var(--muted);margin-bottom:6px;}
-.card-value{font-size:24px;font-weight:700;color:var(--text);line-height:1;}
-.card-delta{font-size:11px;margin-top:5px;}
-.delta-up{color:#e74c3c;}
-.delta-none{color:var(--muted);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.card-sm{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;}
 
-/* CHARTS */
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:20px;}
-.chart-card.half{flex:1;min-width:300px;}
-.chart-row{display:flex;gap:20px;flex-wrap:wrap;}
-.chart-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
-.chart-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
-.chart-wrap{position:relative;width:100%;}
+/* METRIC CARDS */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid var(--col);}
+.metric-label{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.metric-value{font-size:22px;font-weight:700;line-height:1;}
+.metric-delta{font-size:11px;color:var(--muted);margin-top:4px;}
+.metric-delta .up{color:#27ae60;}
+.metric-delta .hi{color:#e67e22;}
 
-/* FILTER BAR */
-.filter-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
-.filter-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 12px;border-radius:18px;font-size:12px;cursor:pointer;transition:all .15s;}
-.filter-btn:hover{border-color:rgba(255,255,255,.2);color:var(--text);}
-.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
-.filter-label{font-size:12px;color:var(--muted);margin-right:4px;}
+/* WAR INTENSITY */
+.intensity-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:20px;}
+.intensity-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.intensity-label{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+.intensity-bar-wrap{background:rgba(255,255,255,0.06);border-radius:4px;height:10px;overflow:hidden;}
+.intensity-bar{height:10px;border-radius:4px;transition:width .4s;}
+.intensity-meta{display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:var(--muted);}
 
-/* STAT ROW */
-.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:24px;}
-.stat-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;}
-.stat-name{font-size:12px;color:var(--muted);}
-.stat-val{font-size:13px;font-weight:600;color:var(--text);}
+/* SUMMARY BLOCK */
+.summary-block{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:20px;border-left:3px solid #3498db;}
+.summary-block p{font-size:13px;line-height:1.6;color:#b0b8d0;}
+
+/* CHART CONTAINERS */
+.chart-wrap{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text);}
+.chart-note{font-size:11px;color:var(--muted);margin-top:8px;}
+canvas{display:block;}
+
+/* GRID LAYOUTS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+/* FILTER BTNS */
+.filter-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;}
+.filter-btn:hover{color:var(--text);}
+.filter-btn.active{background:rgba(192,57,43,.2);border-color:rgba(192,57,43,.5);color:var(--text);}
+.toggle-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;margin-bottom:10px;}
+.toggle-btn:hover{color:var(--text);}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:700;text-transform:uppercase;letter-spacing:.05em;}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.milestone-reached{color:#27ae60;font-weight:700;}
+.milestone-projected{color:#f39c12;}
 
 /* HEATMAP */
 .heatmap-wrap{overflow-x:auto;padding-bottom:8px;}
-.heatmap{display:flex;gap:3px;}
-.hm-col{display:flex;flex-direction:column;gap:3px;}
-.hm-cell{width:12px;height:12px;border-radius:2px;cursor:pointer;transition:opacity .1s;}
-.hm-cell:hover{opacity:.75;}
-.hm-legend{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--muted);}
-.hm-month-labels{display:flex;gap:3px;margin-bottom:4px;}
-.hm-day-labels{display:flex;flex-direction:column;gap:3px;margin-right:4px;font-size:9px;color:var(--muted);padding-top:2px;}
+.heatmap-grid{display:grid;gap:2px;}
+.hm-cell{width:16px;height:16px;border-radius:2px;cursor:pointer;transition:opacity .1s;}
+.hm-cell:hover{opacity:0.7;outline:1px solid #fff;}
+.hm-labels{display:flex;gap:2px;margin-bottom:4px;}
+.hm-label{width:16px;text-align:center;font-size:9px;color:var(--muted);}
+.hm-month-label{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.hm-legend{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--muted);}
+.hm-legend-bar{display:flex;gap:1px;}
+.hm-legend-cell{width:12px;height:12px;border-radius:1px;}
 
-/* EXPORT */
-.export-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;}
-.export-btn:hover{border-color:rgba(255,255,255,.3);}
+/* METHODOLOGY */
+.meth-section{margin-bottom:20px;}
+.meth-section h3{font-size:14px;font-weight:700;margin-bottom:8px;color:#3498db;}
+.meth-section p,.meth-section li{font-size:13px;line-height:1.7;color:#b0b8d0;}
+.meth-section ul{padding-left:18px;}
 
-/* FOOTER */
-.footer{text-align:center;font-size:11px;color:var(--muted);padding:20px 28px 32px;border-top:1px solid var(--border);margin-top:20px;}
+/* TOOLTIP */
+#tooltip{position:fixed;background:rgba(20,24,36,.95);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:8px 12px;font-size:12px;pointer-events:none;z-index:999;display:none;line-height:1.5;}
 
-@media(max-width:700px){.main{padding:16px;}.topbar,.nav{padding-left:16px;padding-right:16px;}.chart-row{flex-direction:column;}}
+/* RESPONSIVE */
+@media(max-width:600px){
+  .topbar{padding:10px 14px;}
+  .content{padding:14px;}
+  .nav{top:80px;}
+  .disclaimer-bar{top:52px;}
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
 
+<div id="tooltip"></div>
+
+<!-- TOPBAR -->
 <div class="topbar">
-  <div>
-    <div class="logo-text">🇺🇦 Orosz veszteségek — Ukrajna</div>
-    <div class="logo-sub">2022. február 24. óta · Forrás: Ukrajna Fegyveres Erői</div>
+  <div class="logo-wrap">
+    <div class="logo-text">Orosz veszteségek Ukrajnában</div>
+    <div class="logo-sub">Reported Russian Losses in Ukraine · Based on Ukrainian General Staff daily claims</div>
   </div>
   <div class="topbar-right">
-    <div class="day-badge" id="dayCounter">–</div>
-    <div class="updated" id="lastUpdated">–</div>
-    <button class="export-btn" onclick="exportCSV()">⬇ CSV letöltés</button>
+    <span class="day-badge" id="dayBadge">— nap</span>
+    <span class="updated" id="updatedLabel"></span>
+    <button class="btn-csv" onclick="exportCSV()">⬇ CSV export</button>
   </div>
 </div>
 
+<!-- DISCLAIMER BAR -->
+<div class="disclaimer-bar">
+  ⚠️ Az adatok az ukrán fél hivatalos napi közlésein alapulnak. A számok jelentett/állított veszteségeket jelölnek, nem függetlenül verifikált adatokat.
+</div>
+
+<!-- NAV -->
 <div class="nav">
   <button class="nav-btn active" onclick="switchTab('overview',this)">Áttekintés</button>
   <button class="nav-btn" onclick="switchTab('trends',this)">Trendek</button>
@@ -111,200 +157,262 @@ a{color:var(--blue);text-decoration:none;}
   <button class="nav-btn" onclick="switchTab('equipment',this)">Felszerelés</button>
   <button class="nav-btn" onclick="switchTab('analytics',this)">Elemzés</button>
   <button class="nav-btn" onclick="switchTab('heatmap',this)">Hőtérkép</button>
+  <button class="nav-btn" onclick="switchTab('method',this)">Módszertan</button>
 </div>
 
-<!-- PAGE: OVERVIEW -->
-<div class="main">
-<div id="page-overview" class="page active">
-  <div class="section-label">Fő mutatók — legutolsó adat</div>
-  <div class="cards">
-    <div class="card red"><div class="card-label">👤 Személyi veszteség</div><div class="card-value" id="v-personnel">–</div><div class="card-delta" id="d-personnel">–</div></div>
-    <div class="card red"><div class="card-label">🪖 Harckocsi</div><div class="card-value" id="v-tanks">–</div><div class="card-delta" id="d-tanks">–</div></div>
-    <div class="card red"><div class="card-label">🚛 Páncélozott jármű</div><div class="card-value" id="v-afv">–</div><div class="card-delta" id="d-afv">–</div></div>
-    <div class="card yellow"><div class="card-label">💥 Tüzérség</div><div class="card-value" id="v-artillery">–</div><div class="card-delta" id="d-artillery">–</div></div>
-    <div class="card blue"><div class="card-label">✈️ Repülő</div><div class="card-value" id="v-planes">–</div><div class="card-delta" id="d-planes">–</div></div>
-    <div class="card blue"><div class="card-label">🚁 Helikopter</div><div class="card-value" id="v-helicopters">–</div><div class="card-delta" id="d-helicopters">–</div></div>
-    <div class="card green"><div class="card-label">🛸 Drón (UAV)</div><div class="card-value" id="v-uav">–</div><div class="card-delta" id="d-uav">–</div></div>
-    <div class="card green"><div class="card-label">🎯 Cirkálórakéta</div><div class="card-value" id="v-missiles">–</div><div class="card-delta" id="d-missiles">–</div></div>
+<!-- ===================== OVERVIEW TAB ===================== -->
+<div id="tab-overview" class="tab-pane active">
+<div class="content">
+
+  <div class="summary-block">
+    <p><strong>Rövid értékelés:</strong> A legfrissebb adatok alapján az ukrán vezérkari közlések magas napi orosz személyi veszteségi ütemet jeleznek (2026 május átlaga: ~1 000+ fő/nap). Az UAV-veszteségek meredeken gyorsuló ütemben növekednek. Az adatok trendjelzésre alkalmasabbak, mint pontos veszteségbecslésre.</p>
   </div>
 
-  <div class="section-label">Napi veszteség — utolsó 30 nap</div>
-  <div class="chart-row">
-    <div class="chart-card half">
-      <div class="chart-title">Személyi veszteség / nap</div>
-      <div class="chart-sub">+ 7 napos gördülő átlag</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-daily-personnel"></canvas></div>
+  <!-- WAR INTENSITY -->
+  <div class="section-title">Háborús intenzitásmutatók</div>
+  <div class="intensity-grid" id="intensityGrid"></div>
+  <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-bottom:16px;line-height:1.5;">Az indikátorok 0–100-as relatív skálán mutatják az adott mutató jelenlegi értékét a 2022–2026 közötti saját idősor minimumához és maximumához képest. A 100-as érték az eddigi legmagasabb 30 napos átlagot jelenti.</p>
+
+  <!-- METRIC CARDS -->
+  <div class="section-title">Kumulált veszteségek (legutóbbi adat)</div>
+  <div class="metrics-grid" id="metricsGrid"></div>
+
+  <!-- CHARTS -->
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Napi személyi veszteség (máj. 2026) + 7 napos átlag</div>
+      <canvas id="ov-personnel-chart" height="180"></canvas>
+      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
     </div>
-    <div class="chart-card half">
-      <div class="chart-title">Tüzérség veszteség / nap</div>
-      <div class="chart-sub">+ 7 napos gördülő átlag</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-daily-artillery"></canvas></div>
+    <div class="chart-wrap">
+      <div class="chart-title">Napi UAV veszteség (máj. 2026) + 7 napos átlag</div>
+      <canvas id="ov-uav-chart" height="180"></canvas>
+      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Napi tüzérségi veszteség (máj. 2026)</div>
+      <canvas id="ov-arty-chart" height="180"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Napi harckocsi + IFV veszteség (máj. 2026)</div>
+      <canvas id="ov-armor-chart" height="180"></canvas>
+      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
     </div>
   </div>
 
-  <div class="section-label">Egyéb mutatók</div>
-  <div class="stat-row">
-    <div class="stat-item"><span class="stat-name">🚀 MLRS</span><span class="stat-val" id="v-mlrs">–</span></div>
-    <div class="stat-item"><span class="stat-name">🛡️ Légvédelem</span><span class="stat-val" id="v-airdef">–</span></div>
-    <div class="stat-item"><span class="stat-name">🚢 Hajó</span><span class="stat-val" id="v-ships">–</span></div>
-    <div class="stat-item"><span class="stat-name">🤿 Tengeralattjáró</span><span class="stat-val" id="v-submarines">–</span></div>
-    <div class="stat-item"><span class="stat-name">🚗 Jármű</span><span class="stat-val" id="v-vehicles">–</span></div>
-    <div class="stat-item"><span class="stat-name">🤖 Robot rendszer</span><span class="stat-val" id="v-robots">–</span></div>
-  </div>
+</div>
 </div>
 
-<!-- PAGE: TRENDS -->
-<div id="page-trends" class="page">
-  <div class="section-label">Napi trendek — szűrő</div>
-  <div class="filter-bar">
-    <span class="filter-label">Időtáv:</span>
-    <button class="filter-btn active" onclick="setDailyRange(7,this)">7 nap</button>
-    <button class="filter-btn" onclick="setDailyRange(14,this)">14 nap</button>
-    <button class="filter-btn" onclick="setDailyRange(30,this)">30 nap</button>
-    <button class="filter-btn" onclick="setDailyRange(60,this)">60 nap</button>
+<!-- ===================== TRENDS TAB ===================== -->
+<div id="tab-trends" class="tab-pane">
+<div class="content">
+  <div class="section-title">Trendszűrő</div>
+  <div class="filter-bar" id="trendFilter">
+    <button class="filter-btn active" onclick="setTrendFilter(7,this)">7 nap</button>
+    <button class="filter-btn" onclick="setTrendFilter(14,this)">14 nap</button>
+    <button class="filter-btn" onclick="setTrendFilter(30,this)">30 nap</button>
+    <button class="filter-btn" onclick="setTrendFilter(31,this)">Teljes máj.</button>
   </div>
-
-  <div class="chart-card">
-    <div class="chart-title">Napi személyi veszteség + 7 napos átlag</div>
-    <div class="chart-wrap" style="height:240px"><canvas id="c-trend-personnel"></canvas></div>
+  <div class="chart-wrap">
+    <div class="chart-title">Napi személyi veszteség + 7 napos gördülő átlag</div>
+    <canvas id="tr-personnel-chart" height="180"></canvas>
+    <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
   </div>
-  <div class="chart-row">
-    <div class="chart-card half">
-      <div class="chart-title">Napi UAV drón veszteség</div>
-      <div class="chart-wrap" style="height:200px"><canvas id="c-trend-uav"></canvas></div>
-    </div>
-    <div class="chart-card half">
-      <div class="chart-title">Napi tüzérség + páncélozott jármű</div>
-      <div class="chart-wrap" style="height:200px"><canvas id="c-trend-armor"></canvas></div>
-    </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Napi UAV veszteség + 7 napos átlag</div>
+    <canvas id="tr-uav-chart" height="180"></canvas>
+    <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
   </div>
-</div>
-
-<!-- PAGE: HISTORY -->
-<div id="page-history" class="page">
-  <div class="section-label">Teljes idősor — 2022. február–2026. május (negyedéves adatpontok + napi máj. 2026)</div>
-  <div class="chart-card">
-    <div class="chart-title">Kumulált személyi veszteség</div>
-    <div class="chart-sub">4 év alatt ~1,36 millió fő — a növekedési ütem évről évre gyorsult</div>
-    <div class="chart-wrap" style="height:280px"><canvas id="c-hist-personnel"></canvas></div>
-  </div>
-  <div class="chart-row">
-    <div class="chart-card half">
-      <div class="chart-title">Harckocsi veszteség idősorban</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-hist-tanks"></canvas></div>
-    </div>
-    <div class="chart-card half">
-      <div class="chart-title">UAV drón (exponenciális növekedés)</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-hist-uav"></canvas></div>
-    </div>
-  </div>
-  <div class="chart-card">
-    <div class="chart-title">Havi új személyi veszteség (hónap/hónap növekedés)</div>
-    <div class="chart-sub">Jól látható az orosz veszteségi ráta gyorsulása 2024 végétől</div>
-    <div class="chart-wrap" style="height:240px"><canvas id="c-hist-monthly-delta"></canvas></div>
+  <div class="chart-wrap">
+    <div class="chart-title">Tüzérség + IFV napi veszteség (halmozott)</div>
+    <canvas id="tr-stack-chart" height="180"></canvas>
+    <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
   </div>
 </div>
-
-<!-- PAGE: EQUIPMENT -->
-<div id="page-equipment" class="page">
-  <div class="section-label">Felszerelés összesítve</div>
-  <div class="chart-card">
-    <div class="chart-title">Összes elveszett eszköz — összesített (2026. máj. 31.)</div>
-    <div class="chart-sub">db kategóriánként, naplóskálán</div>
-    <div class="chart-wrap" style="height:300px"><canvas id="c-equip-all"></canvas></div>
-  </div>
-  <div class="chart-row">
-    <div class="chart-card half">
-      <div class="chart-title">Légi veszteségek idősorban</div>
-      <div class="chart-sub">Repülő és helikopter — negyedéves adatpontok</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-equip-air"></canvas></div>
-    </div>
-    <div class="chart-card half">
-      <div class="chart-title">Tüzérség és MLRS növekedés</div>
-      <div class="chart-sub">A leggyorsabban növekvő kategóriák</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-equip-artillery"></canvas></div>
-    </div>
-  </div>
 </div>
 
-<!-- PAGE: ANALYTICS -->
-<div id="page-analytics" class="page">
-  <div class="section-label">Elemzői nézetek</div>
-  <div class="chart-row">
-    <div class="chart-card half">
-      <div class="chart-title">Éves átlagos napi veszteség</div>
-      <div class="chart-sub">Mennyivel intenzívebb lett a háború évenként?</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-yearly-avg"></canvas></div>
+<!-- ===================== HISTORY TAB ===================== -->
+<div id="tab-history" class="tab-pane">
+<div class="content">
+  <div class="summary-block">
+    <p>A historikus adatok negyedéves/hónapvégi rögzített értékek (17 adatpont, 2022 márc.–2026 ápr.). Az X-tengelyen negyedéves formátum látható.</p>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Kumulált személyi veszteség (negyedéves)</div>
+    <canvas id="hist-personnel-chart" height="200"></canvas>
+  </div>
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Harckocsi veszteség (negyedéves)</div>
+      <canvas id="hist-tanks-chart" height="200"></canvas>
     </div>
-    <div class="chart-card half">
-      <div class="chart-title">Veszteségi gyorsulás</div>
-      <div class="chart-sub">Havi új személyi veszteség — a ráta meredeken nő</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-monthly-rate"></canvas></div>
+    <div class="chart-wrap">
+      <div class="chart-title">UAV veszteség — meredeken gyorsuló növekedés</div>
+      <canvas id="hist-uav-chart" height="200"></canvas>
     </div>
   </div>
-  <div class="chart-card">
-    <div class="chart-title">Veszteség összetétel változása időben (%)</div>
-    <div class="chart-sub">Az egyes eszközkategóriák aránya a teljes veszteségen belül — negyedévenként</div>
-    <div class="chart-wrap" style="height:260px"><canvas id="c-composition"></canvas></div>
+  <div class="chart-wrap">
+    <div class="chart-title">Negyedéves új veszteség (személyi, negyedévenként) — intenzitás szerint színezve</div>
+    <canvas id="hist-quarterly-chart" height="180"></canvas>
+    <p class="chart-note">* Részleges negyedév</p>
   </div>
-  <div class="chart-row">
-    <div class="chart-card half">
-      <div class="chart-title">📍 Mérföldkövek</div>
-      <div class="chart-sub">Mikor érte el az egyes kerek számokat a személyi veszteség?</div>
-      <div id="milestones-list" style="padding:4px 0;"></div>
+</div>
+</div>
+
+<!-- ===================== EQUIPMENT TAB ===================== -->
+<div id="tab-equipment" class="tab-pane">
+<div class="content">
+  <button class="toggle-btn" id="logToggle" onclick="toggleLog()">Logaritmikus skála: KI</button>
+  <div class="chart-note" style="margin-bottom:12px;">⚠️ A kategóriák nem azonos haditechnikai súlyúak. Az UAV drón és a harckocsi nem összehasonlítható egységek.</div>
+  <div class="chart-wrap">
+    <div class="chart-title">Összes felszerelési kategória — kumulált veszteség (legutóbbi adat)</div>
+    <canvas id="eq-bar-chart" height="280"></canvas>
+  </div>
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Légierő veszteségek idősorban (negyedéves)</div>
+      <canvas id="eq-air-chart" height="200"></canvas>
+      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
     </div>
-    <div class="chart-card half">
-      <div class="chart-title">📈 Előrejelzés (jelenlegi ráta alapján)</div>
-      <div class="chart-sub">7 napos átlag extrapolálva — tájékoztató jellegű</div>
-      <div id="projection-list" style="padding:4px 0;"></div>
+    <div class="chart-wrap">
+      <div class="chart-title">Tüzérség & MLRS idősor (negyedéves)</div>
+      <canvas id="eq-arty-chart" height="200"></canvas>
+      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
     </div>
   </div>
 </div>
-
-<!-- PAGE: HEATMAP -->
-<div id="page-heatmap" class="page">
-  <div class="section-label">Napi veszteség hőtérképe — 2026. május (napi részletes adatok)</div>
-  <div class="chart-row">
-    <div class="chart-card half">
-      <div class="chart-title">Személyi veszteség — napi intenzitás</div>
-      <div class="chart-sub">Sötétebb piros = több veszteség aznap</div>
-      <div id="heatmap-personnel" style="min-height:120px;"></div>
-      <div class="hm-legend" style="margin-top:8px;">
-        <span style="font-size:11px;color:var(--muted)">Kevesebb</span>
-        <div id="hm-leg-p" style="display:flex;gap:2px;margin:0 6px;"></div>
-        <span style="font-size:11px;color:var(--muted)">Több</span>
-      </div>
-    </div>
-    <div class="chart-card half">
-      <div class="chart-title">UAV drón veszteség — napi intenzitás</div>
-      <div class="chart-sub">Sötétebb zöld = több drón aznap</div>
-      <div id="heatmap-uav" style="min-height:120px;"></div>
-    </div>
-  </div>
-  <div class="chart-card">
-    <div class="chart-title">Napi bontás — máj. 2026 részletesen</div>
-    <div class="chart-sub">Minden mért metrika napi változása oszlopdiagramon</div>
-    <div class="filter-bar" style="margin-bottom:10px;">
-      <span class="filter-label">Mutató:</span>
-      <button class="filter-btn active" onclick="setHmField('personnel',this)">Személyi</button>
-      <button class="filter-btn" onclick="setHmField('uav',this)">Drón</button>
-      <button class="filter-btn" onclick="setHmField('artillery',this)">Tüzérség</button>
-      <button class="filter-btn" onclick="setHmField('afv',this)">Páncélozott</button>
-    </div>
-    <div class="chart-wrap" style="height:200px"><canvas id="c-hm-daily"></canvas></div>
-  </div>
 </div>
 
-</div><!-- /main -->
+<!-- ===================== ANALYTICS TAB ===================== -->
+<div id="tab-analytics" class="tab-pane">
+<div class="content">
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Éves átlagos napi személyi veszteség</div>
+      <canvas id="an-annual-chart" height="200"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Negyedéves veszteségi ütem (személyi)</div>
+      <canvas id="an-quarterly-chart" height="200"></canvas>
+    </div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Veszteség-összetétel % (negyedéves, főbb kategóriák)</div>
+    <canvas id="an-composition-chart" height="200"></canvas>
+    <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
+  </div>
 
-<div class="footer">
-  Adatforrás: <a href="https://index.minfin.com.ua/en/russian-invading/casualties/" target="_blank">index.minfin.com.ua</a>
-  &nbsp;·&nbsp; Ukrajna Fegyveres Erőinek hivatalos adatai
-  &nbsp;·&nbsp; Az adatok tájékoztató jellegűek
+  <div class="grid2" style="margin-top:16px;">
+    <div class="card">
+      <div class="section-title">Mérföldkövek</div>
+      <table id="milestoneTable">
+        <thead><tr><th>Határ</th><th>Elért dátum</th><th>Háborús nap</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="section-title">Mechanikus kivetítés — jelenlegi ütem alapján</div>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Nem előrejelzés, hanem egyszerű lineáris kivetítés. A tényleges ütem a harctéri helyzettől, jelentési gyakorlattól és műveleti intenzitástól jelentősen eltérhet.</p>
+      <table id="projectionTable">
+        <thead><tr><th>Cél</th><th>7 napos átlag</th><th>30 napos átlag</th><th>90 napos átlag</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="section-title">Kulcsidőszakok kontextus-idővonala</div>
+    <table id="contextTable">
+      <thead><tr><th>Időszak</th><th>Megjegyzés</th><th>Átlag napi (személyi)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ===================== HEATMAP TAB ===================== -->
+<div id="tab-heatmap" class="tab-pane">
+<div class="content">
+  <div class="filter-bar" id="hmFilter">
+    <button class="filter-btn active" onclick="setHmField('personnel',this)">Személyi</button>
+    <button class="filter-btn" onclick="setHmField('uav',this)">Drón</button>
+    <button class="filter-btn" onclick="setHmField('artillery',this)">Tüzérség</button>
+    <button class="filter-btn" onclick="setHmField('afv',this)">Páncélozott</button>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title" id="hmTitle">Személyi veszteség — napi hőtérkép (2026 május)</div>
+    <div class="heatmap-wrap">
+      <div id="hmContainer"></div>
+    </div>
+    <div class="hm-legend" id="hmLegend"></div>
+    <div class="chart-note">Vigye az egeret a cellára a részletes adatokhoz.</div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title" id="hmBarTitle">Napi személyi veszteség (máj. 2026)</div>
+    <canvas id="hm-bar-chart" height="160"></canvas>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="section-title">Top 5 legintenzívebb nap (személyi veszteség)</div>
+    <ol id="hmTop5" style="padding-left:18px;font-size:13px;line-height:2;color:var(--text);"></ol>
+  </div>
+</div>
+</div>
+
+<!-- ===================== METHODOLOGY TAB ===================== -->
+<div id="tab-method" class="tab-pane">
+<div class="content">
+  <div class="card">
+    <div class="meth-section">
+      <h3>Adatforrás</h3>
+      <p><strong>Elsődleges forrás:</strong> Ukrajna Fegyveres Erejének Vezérkara (Генеральний штаб ЗСУ)</p>
+      <p><strong>Adataggregátor:</strong> index.minfin.com.ua</p>
+      <p><strong>Feldolgozás:</strong> saját napi különbségszámítás (consecutive day delta)</p>
+      <p style="margin-top:8px;">Ez a dashboard nem Oryx-típusú vizuálisan verifikált veszteséglista, hanem ukrán hivatalos közlésalapú trendfigyelő.</p>
+    </div>
+    <div class="meth-section">
+      <h3>Frissítés</h3>
+      <p>A napló-jellegű közléseket az ukrán vezérkar naponta reggel (helyi idő szerint) teszi közzé. Az itt megjelenő adatok naponta 9:00-kor automatikusan frissülnek.</p>
+    </div>
+    <div class="meth-section">
+      <h3>Mit jelent a "napi veszteség"?</h3>
+      <p>A kumulált (összesített) adatokból napi különbséggel számítunk: <code>napi_érték[t] = kumulált[t] − kumulált[t−1]</code>. Így az egyes napon bejelentett új veszteségek láthatók.</p>
+    </div>
+    <div class="meth-section">
+      <h3>7 napos gördülő átlag</h3>
+      <p>A napi adatok zajosak (hétvégén alacsonyabb bejelentések stb.). A 7 napos gördülő átlag (rolling mean) simítja ezt a zajt és jobban mutatja a tényleges trendet. Számítása: az adott nap és az előző 6 nap napi értékeinek átlaga.</p>
+    </div>
+    <div class="meth-section">
+      <h3>Historikus adatok</h3>
+      <p>A teljes idősoros nézetben kizárólag negyedéves/hónapvégi rögzített kumulált értékeket jelenítünk meg (17 adatpont). Ezek nem keverhetők össze a napi adatokkal.</p>
+    </div>
+    <div class="meth-section">
+      <h3>Napi adatok elérhetősége</h3>
+      <p>Teljes napi bontású adatok jelenleg csak 2026 május hónapra állnak rendelkezésre (31 nap). A hőtérkép és a trend nézetek erre az időszakra épülnek.</p>
+    </div>
+    <div class="meth-section">
+      <h3>Korlátok — FONTOS</h3>
+      <ul>
+        <li>Az adatok <strong>kizárólag az ukrán fél saját közlései</strong>. Nem verifikáltak és nem ellenőrzöttek független forrás által.</li>
+        <li>Az ukrán vezérkar motivált lehet a veszteségek felülbecslésére — különösen a személyi állomány és az UAV kategóriákban.</li>
+        <li>Az OSINT-elemzők (Oryx, ISW stb.) általában alacsonyabb, de vizuálisan dokumentált eszközveszteségeket közölnek.</li>
+        <li>A számok trendjelzésre alkalmasak, pontos abszolút becslésre nem.</li>
+        <li>Nincs független verifikáció. A valóság eltérhet a közölt értékektől.</li>
+      </ul>
+    </div>
+    <div class="meth-section">
+      <h3>CSV export felépítése</h3>
+      <p>Oszlopok: <code>date, war_day, personnel_total, personnel_daily, tanks_total, tanks_daily, artillery_total, artillery_daily, uav_total, uav_daily, source_url</code></p>
+    </div>
+  </div>
+</div>
 </div>
 
 <script>
-// ==================== HISTORIKUS ADATOK (havi végek) ====================
+// ============================================================
+//  DATA
+// ============================================================
 const MONTHLY = [
   {date:"2022-03-31",personnel:17500,tanks:614,afv:1735,artillery:311,mlrs:96,airdef:54,planes:135,helicopters:131,uav:83,missiles:0,ships:7,submarines:0,vehicles:1276,special:22,robots:0},
   {date:"2022-06-30",personnel:35600,tanks:1573,afv:3726,artillery:790,mlrs:246,airdef:104,planes:217,helicopters:185,uav:641,missiles:143,ships:14,submarines:0,vehicles:2602,special:61,robots:0},
@@ -325,7 +433,6 @@ const MONTHLY = [
   {date:"2026-04-30",personnel:1330290,tanks:11901,afv:24493,artillery:40944,mlrs:1756,airdef:1356,planes:435,helicopters:352,uav:263360,missiles:4579,ships:33,submarines:2,vehicles:92606,special:4148,robots:0}
 ];
 
-// ==================== NAPI ADATOK (máj 2026) ====================
 const DAILY = [
   {date:"2026-05-01",personnel:1331710,tanks:11903,afv:24496,artillery:41044,mlrs:1757,airdef:1357,planes:435,helicopters:352,uav:265284,missiles:4579,ships:33,submarines:2,vehicles:93009,special:4150,robots:0},
   {date:"2026-05-02",personnel:1332950,tanks:11906,afv:24500,artillery:41117,mlrs:1763,airdef:1357,planes:435,helicopters:352,uav:267589,missiles:4579,ships:33,submarines:2,vehicles:93274,special:4151,robots:0},
@@ -360,481 +467,826 @@ const DAILY = [
   {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519}
 ];
 
-// ==================== HELPERS ====================
-const fmt = n => n==null?'–':Math.round(n).toLocaleString('hu-HU');
-const TC = 'rgba(255,255,255,0.5)';
-const GC = 'rgba(255,255,255,0.07)';
-let charts = {};
-let dailyRange = 30;
-let hmField = 'personnel';
+// ============================================================
+//  HELPERS
+// ============================================================
+const WAR_START = new Date('2022-02-24');
 
-// Negyedéves label pl. "2022 Q3"
+function warDay(dateStr) {
+  const d = new Date(dateStr);
+  return Math.round((d - WAR_START) / 86400000) + 1;
+}
+
 function qLabel(dateStr) {
-  const dt = new Date(dateStr);
-  const y = dt.getFullYear();
-  const q = Math.ceil((dt.getMonth()+1)/3);
-  return y+' Q'+q;
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = d.getMonth(); // 0-based
+  const q = Math.floor(m / 3) + 1;
+  let label = `${y} Q${q}`;
+  // Mark partial quarters
+  if (y === 2022 && q === 1) label += '*';
+  if (y === 2026 && q === 2) label += '*';
+  return label;
 }
-// Rövid dátum pl. "máj.3."
+
 function dayLabel(dateStr) {
-  const dt = new Date(dateStr);
-  const mo = ['jan','feb','már','ápr','máj','jún','júl','aug','szep','okt','nov','dec'];
-  return mo[dt.getMonth()]+'.'+dt.getDate()+'.';
+  const d = new Date(dateStr);
+  const months = ['jan.','febr.','márc.','ápr.','máj.','jún.','júl.','aug.','szept.','okt.','nov.','dec.'];
+  return months[d.getMonth()] + d.getDate() + '.';
 }
 
-function rolling7(arr) {
-  return arr.map((v,i) => {
-    const s = arr.slice(Math.max(0,i-6), i+1);
-    return Math.round(s.reduce((a,b)=>a+b,0)/s.length);
-  });
+function fmt(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(2) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'k';
+  return n.toLocaleString('hu-HU');
 }
 
-function getDiffs(data, field) {
-  return data.map((d,i) => i===0 ? 0 : Math.max(0, d[field] - data[i-1][field]));
+function fmtFull(n) {
+  return n.toLocaleString('hu-HU');
 }
 
-const BASE_OPTS = (yCb) => ({
-  responsive:true, maintainAspectRatio:false,
-  plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.parsed.y)}}},
-  scales:{
-    x:{ticks:{color:TC,font:{size:11},maxRotation:35,autoSkip:true,maxTicksLimit:12},grid:{color:GC}},
-    y:{ticks:{color:TC,font:{size:11},callback:yCb||(v=>fmt(v))},grid:{color:GC}}
+// Daily deltas from DAILY array
+function dailyDeltas(arr, field) {
+  const res = [];
+  // first day delta vs last monthly point
+  const prev0 = MONTHLY[MONTHLY.length - 1][field];
+  for (let i = 0; i < arr.length; i++) {
+    const prev = i === 0 ? prev0 : arr[i-1][field];
+    let delta = Math.max(0, arr[i][field] - prev);
+    // Suppress robot tracking-start spike: if prev was 0 and delta > 100, treat as 0
+    if (field === 'robots' && prev === 0 && delta > 100) delta = 0;
+    res.push(delta);
   }
-});
-
-function makeBar(id, labels, datasets, yCb, extra={}) {
-  if(charts[id]) charts[id].destroy();
-  const el = document.getElementById(id); if(!el) return;
-  charts[id] = new Chart(el, {type:'bar', data:{labels,datasets}, options:{...BASE_OPTS(yCb),...extra}});
+  return res;
 }
 
-function makeLine(id, labels, datasets, yCb) {
-  if(charts[id]) charts[id].destroy();
-  const el = document.getElementById(id); if(!el) return;
-  const showLegend = datasets.length > 1;
-  charts[id] = new Chart(el, {
-    type:'line', data:{labels,datasets},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:showLegend,labels:{color:TC,font:{size:11},boxWidth:10,padding:12}}},
-      scales:{
-        x:{ticks:{color:TC,font:{size:11},maxRotation:35,autoSkip:true,maxTicksLimit:12},grid:{color:GC}},
-        y:{ticks:{color:TC,font:{size:11},callback:yCb||(v=>fmt(v))},grid:{color:GC}}
-      }
-    }
+function rollingAvg(arr, n) {
+  return arr.map((v, i) => {
+    const slice = arr.slice(Math.max(0, i - n + 1), i + 1);
+    return slice.reduce((a,b) => a+b, 0) / slice.length;
   });
 }
 
-function makeBarWithAvg(id, labels, bars, color) {
-  if(charts[id]) charts[id].destroy();
-  const el = document.getElementById(id); if(!el) return;
-  const avg = rolling7(bars);
-  charts[id] = new Chart(el, {
-    type:'bar',
-    data:{labels, datasets:[
-      {type:'bar', data:bars, backgroundColor:bars.map(v=>v>=1400?'#a32d2d':v>=1200?'#d85a30':color), borderRadius:2, borderSkipped:false, order:2, label:'Napi'},
-      {type:'line', data:avg, borderColor:'rgba(255,255,255,0.75)', borderWidth:2, pointRadius:0, fill:false, tension:0.4, order:1, label:'7 napos átlag'}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:true,labels:{color:TC,font:{size:11},boxWidth:10}}},
-      scales:{
-        x:{ticks:{color:TC,font:{size:11},maxRotation:35,autoSkip:true,maxTicksLimit:12},grid:{color:GC}},
-        y:{ticks:{color:TC,font:{size:11},callback:v=>fmt(v)},grid:{color:GC}}
-      }
-    }
-  });
-}
-
-// ==================== INIT ====================
-function init() {
-  const last = DAILY[DAILY.length-1];
-  const prev = DAILY[DAILY.length-2];
-
-  const start = new Date('2022-02-24');
-  const lastDate = new Date(last.date);
-  const days = Math.floor((lastDate-start)/86400000);
-  document.getElementById('dayCounter').textContent = days+'. nap';
-  document.getElementById('lastUpdated').textContent = 'Frissítve: '+lastDate.toLocaleDateString('hu-HU',{year:'numeric',month:'long',day:'numeric'});
-
-  ['personnel','tanks','afv','artillery','planes','helicopters','uav','missiles'].forEach(f=>{
-    const el=document.getElementById('v-'+f);
-    const del=document.getElementById('d-'+f);
-    if(el) el.textContent=fmt(last[f]);
-    if(del&&prev){
-      const d=last[f]-prev[f];
-      del.textContent=d===0?'változatlan':(d>0?'+':'')+fmt(d)+' (tegnap óta)';
-      del.className='card-delta '+(d>0?'delta-up':'delta-none');
-    }
-  });
-  ['mlrs','airdef','ships','submarines','vehicles','robots'].forEach(f=>{
-    const el=document.getElementById('v-'+f);
-    if(el) el.textContent=fmt(last[f]);
-  });
-
-  setTimeout(renderOverviewCharts, 50);
-}
+// ── CHART REZGÉS FIX ──────────────────────────────────────────
+// A Chart.js ResizeObserver hurkot okoz ha responsive:true és a
+// container mérete függ a canvas tartalmától. Megoldás: responsive:false
+// + a canvas méretét JavaScript-ből állítjuk be a wrapper alapján.
+Chart.defaults.animation = false;
 
 const rendered = {};
+const chartInstances = {};
 
-function getRecentDaily(n) {
-  return DAILY.slice(-n);
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
 }
 
-function renderOverviewCharts() {
-  const slice = getRecentDaily(30);
-  const labels = slice.map(d=>{const dt=new Date(d.date);return (dt.getMonth()+1)+'.'+(dt.getDate())+'.'});
-  const diffs_p = getDiffs(slice,'personnel');
-  const diffs_a = getDiffs(slice,'artillery');
-  makeBarWithAvg('c-daily-personnel', labels, diffs_p, '#378add');
-  makeBarWithAvg('c-daily-artillery', labels, diffs_a, '#f39c12');
+// Canvas méretezése a wrapper div alapján (responsive:false esetén kell)
+function sizeCanvas(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const wrapper = canvas.parentElement;
+  if (!wrapper) return;
+  const w = wrapper.clientWidth || 600;
+  const h = wrapper.clientHeight || 260;
+  canvas.width = w;
+  canvas.height = h;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
 }
 
-function renderTrendCharts() {
-  const slice = getRecentDaily(dailyRange);
-  const labels = slice.map(d=>{const dt=new Date(d.date);return (dt.getMonth()+1)+'.'+(dt.getDate())+'.'});
-  const diffs_p = getDiffs(slice,'personnel');
-  const diffs_u = getDiffs(slice,'uav');
-  const diffs_a = getDiffs(slice,'artillery');
-  const diffs_afv = getDiffs(slice,'afv');
-  const avg_p = rolling7(diffs_p);
+const C = '#6b7080';   // tick color
+const G = 'rgba(255,255,255,0.05)'; // grid color
 
-  makeBarWithAvg('c-trend-personnel', labels, diffs_p, '#378add');
-
-  if(charts['c-trend-uav']) charts['c-trend-uav'].destroy();
-  charts['c-trend-uav'] = new Chart(document.getElementById('c-trend-uav'),{type:'bar',
-    data:{labels,datasets:[{data:diffs_u,backgroundColor:'#27ae60',borderRadius:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.parsed.y)+' db'}}},
-      scales:{x:{ticks:{color:TC,font:{size:10},autoSkip:true,maxTicksLimit:12},grid:{color:GC}},
-              y:{ticks:{color:TC,font:{size:10},callback:v=>fmt(v)},grid:{color:GC}}}}
-  });
-
-  if(charts['c-trend-armor']) charts['c-trend-armor'].destroy();
-  charts['c-trend-armor'] = new Chart(document.getElementById('c-trend-armor'),{type:'bar',
-    data:{labels,datasets:[
-      {label:'Tüzérség',data:diffs_a,backgroundColor:'#f39c12',borderRadius:2,stack:'s'},
-      {label:'Páncélozott',data:diffs_afv,backgroundColor:'#c0392b',borderRadius:2,stack:'s'}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TC,font:{size:11},boxWidth:10}}},
-      scales:{x:{stacked:true,ticks:{color:TC,font:{size:10},autoSkip:true,maxTicksLimit:12},grid:{color:GC}},
-              y:{stacked:true,ticks:{color:TC,font:{size:10},callback:v=>fmt(v)},grid:{color:GC}}}}
-  });
+function baseOpts(extra) {
+  return Object.assign({
+    responsive: false,          // ← kulcs: kikapcsolja a ResizeObserver-t
+    animation: false,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { mode: 'index', intersect: false }
+    },
+    scales: {
+      x: { ticks: { color: C, font: { size: 10 }, maxRotation: 40, autoSkip: true, maxTicksLimit: 12 }, grid: { color: G } },
+      y: { ticks: { color: C, font: { size: 10 } }, grid: { color: G } }
+    }
+  }, extra || {});
 }
 
-function renderHistoryCharts() {
-  // Csak negyedéves adatpontok → olvasható x-tengely
+function makeChart(id, type, data, options) {
+  destroyChart(id);
+  sizeCanvas(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  chartInstances[id] = new Chart(ctx, { type, data, options });
+  return chartInstances[id];
+}
+
+const chartDefaults = baseOpts();
+
+function mergeDefaults(opts) {
+  const base = baseOpts();
+  return {
+    ...base,
+    plugins: {
+      legend: opts.plugins?.legend ?? base.plugins.legend,
+      tooltip: opts.plugins?.tooltip ?? base.plugins.tooltip
+    },
+    scales: {
+      x: Object.assign({}, base.scales.x, opts.scales?.x ?? {}),
+      y: Object.assign({}, base.scales.y, opts.scales?.y ?? {})
+    },
+    ...(opts.indexAxis ? { indexAxis: opts.indexAxis } : {})
+  };
+}
+
+// ============================================================
+//  TOPBAR INIT
+// ============================================================
+(function initTopbar() {
+  const last = DAILY[DAILY.length - 1];
+  const d = warDay(last.date);
+  document.getElementById('dayBadge').textContent = d + '. nap';
+  document.getElementById('updatedLabel').textContent = 'Utoljára: ' + last.date;
+})();
+
+// ============================================================
+//  TAB SWITCHING
+// ============================================================
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (!rendered[name]) {
+    rendered[name] = true;
+    renderTab(name);
+  }
+}
+
+function renderTab(name) {
+  const fns = {
+    overview: renderOverview,
+    trends: renderTrends,
+    history: renderHistory,
+    equipment: renderEquipment,
+    analytics: renderAnalytics,
+    heatmap: renderHeatmap,
+    method: () => {}
+  };
+  if (fns[name]) fns[name]();
+}
+
+// ============================================================
+//  OVERVIEW
+// ============================================================
+rendered['overview'] = true; // will render on load
+
+function renderOverview() {
+  const last = DAILY[DAILY.length - 1];
+  const prevM = MONTHLY[MONTHLY.length - 1];
+
+  // === INTENSITY INDICATORS ===
+  const pDeltas = dailyDeltas(DAILY, 'personnel');
+  const uDeltas = dailyDeltas(DAILY, 'uav');
+  const aDeltas = dailyDeltas(DAILY, 'artillery');
+  const tDeltas = dailyDeltas(DAILY, 'tanks');
+  const pDeltas_afv = dailyDeltas(DAILY, 'afv');
+
+  const avg7p = pDeltas.slice(-7).reduce((a,b)=>a+b,0)/7;
+  const avg30p = pDeltas.reduce((a,b)=>a+b,0)/pDeltas.length;
+  const avg7u = uDeltas.slice(-7).reduce((a,b)=>a+b,0)/7;
+  const avg30u = uDeltas.reduce((a,b)=>a+b,0)/uDeltas.length;
+  const avg7a = aDeltas.slice(-7).reduce((a,b)=>a+b,0)/7;
+  const avg30a = aDeltas.reduce((a,b)=>a+b,0)/aDeltas.length;
+  const avg7t = tDeltas.slice(-7).reduce((a,b)=>a+b,0)/7;
+  const avg30t = tDeltas.reduce((a,b)=>a+b,0)/tDeltas.length;
+  const avg7afv = pDeltas_afv.slice(-7).reduce((a,b)=>a+b,0)/7;
+  const avg30afv = pDeltas_afv.reduce((a,b)=>a+b,0)/pDeltas_afv.length;
+
+  function intensityScore(val, ref) { return Math.min(100, Math.round((val/ref)*50 + 25)); }
+
+  const indicators = [
+    { label: 'Személyi veszteségi intenzitás', score: intensityScore(avg7p, avg30p), detail: `7n átlag: ${Math.round(avg7p)} | havi átlag: ${Math.round(avg30p)}` },
+    { label: 'UAV-veszteségi gyorsulás', score: intensityScore(avg7u, avg30u), detail: `7n átlag: ${Math.round(avg7u)} | havi átlag: ${Math.round(avg30u)}` },
+    { label: 'Tüzérségi nyomásindikátor', score: intensityScore(avg7a, avg30a), detail: `7n átlag: ${Math.round(avg7a)} | havi átlag: ${Math.round(avg30a)}` },
+    { label: 'Nehézeszköz-veszteségi mutató', score: intensityScore(avg7t+avg7afv, avg30t+avg30afv), detail: `7n hk+ifv átlag: ${(avg7t+avg7afv).toFixed(1)}` },
+    { label: 'Légi aktivitás (repülő+helikopter)', score: 22, detail: 'Alacsony változás máj. folyamán' }
+  ];
+
+  function scoreColor(s) {
+    if (s < 35) return '#27ae60';
+    if (s < 55) return '#f39c12';
+    if (s < 75) return '#e67e22';
+    return '#c0392b';
+  }
+
+  const ig = document.getElementById('intensityGrid');
+  ig.innerHTML = indicators.map(ind => `
+    <div class="intensity-item">
+      <div class="intensity-label">${ind.label}</div>
+      <div class="intensity-bar-wrap"><div class="intensity-bar" style="width:${ind.score}%;background:${scoreColor(ind.score)};"></div></div>
+      <div class="intensity-meta"><span>${ind.detail}</span><span>${ind.score}/100</span></div>
+    </div>
+  `).join('');
+
+  // === METRIC CARDS ===
+  const metrics = [
+    { label:'Személyi veszteség', val: last.personnel, col:'var(--col-personnel)', delta7: Math.round(avg7p), unit:'/nap' },
+    { label:'Harckocsi', val: last.tanks, col:'var(--col-tanks)', delta7: Math.round(avg7t), unit:'/nap' },
+    { label:'Páncélozott harcjármű (APV/IFV)', val: last.afv, col:'var(--col-afv)', delta7: Math.round(avg7afv), unit:'/nap' },
+    { label:'Tüzérség', val: last.artillery, col:'var(--col-artillery)', delta7: Math.round(avg7a), unit:'/nap' },
+    { label:'Repülő', val: last.planes, col:'var(--col-planes)', delta7: 0, unit:'/nap' },
+    { label:'Helikopter', val: last.helicopters, col:'var(--col-heli)', delta7: 0, unit:'/nap' },
+    { label:'UAV drón', val: last.uav, col:'var(--col-uav)', delta7: Math.round(avg7u), unit:'/nap' },
+    { label:'Cirkálórakéta', val: last.missiles, col:'var(--col-missiles)', delta7: 0, unit:'/nap' }
+  ];
+  document.getElementById('metricsGrid').innerHTML = metrics.map(m => `
+    <div class="metric-card" style="--col:${m.col}">
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-value" style="color:${m.col}">${fmtFull(m.val)}</div>
+      <div class="metric-delta">${m.delta7>0?`<span class="up">7n átlag: ${m.delta7}${m.unit}</span>`:'<span>—</span>'}</div>
+    </div>
+  `).join('');
+
+  // === CHARTS ===
+  const labels = DAILY.map(d => dayLabel(d.date));
+
+  // Personnel
+  const pAvg = rollingAvg(pDeltas, 7);
+  makeChart('ov-personnel-chart', 'bar', {
+    labels,
+    datasets: [
+      { label: 'Napi személyi', data: pDeltas, backgroundColor: 'rgba(192,57,43,0.6)', order: 2 },
+      { label: '7 napos átlag', data: pAvg, type: 'line', borderColor: 'rgba(255,255,255,0.75)', borderWidth: 2, pointRadius: 0, tension: 0.4, fill: false, order: 1 }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } } }));
+
+  // UAV
+  const uAvg = rollingAvg(uDeltas, 7);
+  makeChart('ov-uav-chart', 'bar', {
+    labels,
+    datasets: [
+      { label: 'Napi UAV', data: uDeltas, backgroundColor: 'rgba(39,174,96,0.6)', order: 2 },
+      { label: '7 napos átlag', data: uAvg, type: 'line', borderColor: 'rgba(255,255,255,0.75)', borderWidth: 2, pointRadius: 0, tension: 0.4, fill: false, order: 1 }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } } }));
+
+  // Artillery
+  makeChart('ov-arty-chart', 'bar', {
+    labels,
+    datasets: [{ label: 'Tüzérség', data: aDeltas, backgroundColor: 'rgba(243,156,18,0.6)' }]
+  }, mergeDefaults({}));
+
+  // Tanks + AFV
+  makeChart('ov-armor-chart', 'bar', {
+    labels,
+    datasets: [
+      { label: 'Harckocsi', data: tDeltas, backgroundColor: 'rgba(231,76,60,0.7)', stack: 'armor' },
+      { label: 'IFV/AFV', data: pDeltas_afv, backgroundColor: 'rgba(230,126,34,0.6)', stack: 'armor' }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } }, scales: { x: { stacked: true }, y: { stacked: true } } }));
+}
+
+// ============================================================
+//  TRENDS
+// ============================================================
+let currentTrendDays = 7;
+let trendsCharsInit = false;
+
+function setTrendFilter(days, btn) {
+  currentTrendDays = days;
+  document.querySelectorAll('#trendFilter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTrends();
+}
+
+function renderTrends() {
+  const slice = DAILY.slice(-currentTrendDays);
+  const labels = slice.map(d => dayLabel(d.date));
+
+  const pDeltas = dailyDeltas(slice, 'personnel');
+  const uDeltas = dailyDeltas(slice, 'uav');
+  const aDeltas = dailyDeltas(slice, 'artillery');
+  const afvDeltas = dailyDeltas(slice, 'afv');
+
+  // fix: first delta for sliced array should use correct prev
+  // recalculate properly
+  const sliceIdx = DAILY.length - currentTrendDays;
+  function sliceDeltas(field) {
+    const res = [];
+    for (let i = 0; i < slice.length; i++) {
+      const globalIdx = sliceIdx + i;
+      const prev = globalIdx === 0 ? MONTHLY[MONTHLY.length-1][field] : DAILY[globalIdx-1][field];
+      let delta = Math.max(0, DAILY[globalIdx][field] - prev);
+      if (field === 'robots' && prev === 0 && delta > 100) delta = 0;
+      res.push(delta);
+    }
+    return res;
+  }
+
+  const pD = sliceDeltas('personnel');
+  const uD = sliceDeltas('uav');
+  const aD = sliceDeltas('artillery');
+  const afD = sliceDeltas('afv');
+  const pAvg = rollingAvg(pD, Math.min(7, pD.length));
+  const uAvg = rollingAvg(uD, Math.min(7, uD.length));
+
+  makeChart('tr-personnel-chart', 'bar', {
+    labels,
+    datasets: [
+      { label: 'Napi személyi', data: pD, backgroundColor: 'rgba(192,57,43,0.6)', order: 2 },
+      { label: '7 napos átlag', data: pAvg, type: 'line', borderColor: 'rgba(255,255,255,0.75)', borderWidth: 2, pointRadius: 2, tension: 0.4, fill: false, order: 1 }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } } }));
+
+  makeChart('tr-uav-chart', 'bar', {
+    labels,
+    datasets: [
+      { label: 'Napi UAV', data: uD, backgroundColor: 'rgba(39,174,96,0.6)', order: 2 },
+      { label: '7 napos átlag', data: uAvg, type: 'line', borderColor: 'rgba(255,255,255,0.75)', borderWidth: 2, pointRadius: 2, tension: 0.4, fill: false, order: 1 }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } } }));
+
+  makeChart('tr-stack-chart', 'bar', {
+    labels,
+    datasets: [
+      { label: 'Tüzérség', data: aD, backgroundColor: 'rgba(243,156,18,0.7)', stack: 'a' },
+      { label: 'IFV/AFV', data: afD, backgroundColor: 'rgba(230,126,34,0.7)', stack: 'a' }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } }, scales: { x: { stacked: true }, y: { stacked: true } } }));
+}
+
+// ============================================================
+//  HISTORY
+// ============================================================
+function renderHistory() {
   const labels = MONTHLY.map(d => qLabel(d.date));
 
-  makeLine('c-hist-personnel', labels, [{
-    label:'Személyi veszteség',
-    data: MONTHLY.map(d=>d.personnel),
-    borderColor:'#c0392b', backgroundColor:'rgba(192,57,43,0.12)',
-    fill:true, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:2
-  }], v => v>=1000000 ? (v/1000000).toFixed(2)+'M' : (v/1000).toFixed(0)+'e');
-
-  makeLine('c-hist-tanks', labels, [{
-    label:'Harckocsi',
-    data: MONTHLY.map(d=>d.tanks),
-    borderColor:'#e74c3c', backgroundColor:'rgba(231,76,60,0.12)',
-    fill:true, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:2
-  }]);
-
-  makeLine('c-hist-uav', labels, [{
-    label:'UAV drón',
-    data: MONTHLY.map(d=>d.uav),
-    borderColor:'#27ae60', backgroundColor:'rgba(39,174,96,0.12)',
-    fill:true, tension:0.3, pointRadius:4, pointHoverRadius:6, borderWidth:2
-  }]);
-
-  // Negyedéves delta (hány főt veszített negyedévenként)
-  const deltas = MONTHLY.slice(1).map((d,i) => d.personnel - MONTHLY[i].personnel);
-  const dLabels = MONTHLY.slice(1).map(d => qLabel(d.date));
-  makeBar('c-hist-monthly-delta', dLabels,
-    [{data:deltas, backgroundColor:deltas.map(v=>v>300000?'#a32d2d':v>150000?'#c0392b':v>80000?'#e67e22':v>40000?'#f39c12':'#2980b9'), borderRadius:3}],
-    v=>fmt(v),
-    {plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>'+'+fmt(ctx.parsed.y)+' fő'}}}}
-  );
-}
-
-function renderEquipmentCharts() {
-  const last = DAILY[DAILY.length-1];
-  const eqL = ['Tüzérség','Páncélozott jármű','Harckocsi','UAV drón','Jármű','MLRS','Légvédelem','Repülő','Helikopter','Rakéta'];
-  const eqV = [last.artillery,last.afv,last.tanks,last.uav,last.vehicles,last.mlrs,last.airdef,last.planes,last.helicopters,last.missiles];
-  const eqC = ['#c0392b','#e74c3c','#e74c3c','#27ae60','#8e44ad','#2980b9','#2980b9','#3498db','#9b59b6','#f39c12'];
-
-  if(charts['c-equip-all']) charts['c-equip-all'].destroy();
-  const el = document.getElementById('c-equip-all'); if(el) {
-    charts['c-equip-all'] = new Chart(el, {
-      type:'bar', data:{labels:eqL, datasets:[{data:eqV,backgroundColor:eqC,borderRadius:4}]},
-      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.parsed.x)+' db'}}},
-        scales:{
-          x:{ticks:{color:TC,font:{size:11},callback:v=>v>=1000?(v/1000).toFixed(0)+'e':v},grid:{color:GC}},
-          y:{ticks:{color:TC,font:{size:12}},grid:{display:false}}
-        }
-      }
-    });
-  }
-
-  const qLabels = MONTHLY.map(d=>qLabel(d.date));
-
-  makeLine('c-equip-air', qLabels, [
-    {label:'Repülő',data:MONTHLY.map(d=>d.planes),borderColor:'#3498db',tension:0.3,pointRadius:4,borderWidth:2,fill:false},
-    {label:'Helikopter',data:MONTHLY.map(d=>d.helicopters),borderColor:'#9b59b6',tension:0.3,pointRadius:4,borderWidth:2,fill:false}
-  ]);
-
-  makeLine('c-equip-artillery', qLabels, [
-    {label:'Tüzérség',data:MONTHLY.map(d=>d.artillery),borderColor:'#f39c12',tension:0.3,pointRadius:4,borderWidth:2,fill:false},
-    {label:'MLRS',data:MONTHLY.map(d=>d.mlrs),borderColor:'#e74c3c',tension:0.3,pointRadius:4,borderWidth:2,fill:false}
-  ]);
-}
-
-// ==================== ANALYTICS ====================
-function renderAnalytics() {
-  // Éves átlagos napi veszteség
-  const years = [2022,2023,2024,2025,2026];
-  const yearAvg = years.map(y => {
-    const pts = MONTHLY.filter(d=>new Date(d.date).getFullYear()===y);
-    if(pts.length<2) {
-      // 2026: csak napi adatból
-      if(y===2026) {
-        const diffs = getDiffs(DAILY,'personnel').slice(1);
-        return Math.round(diffs.reduce((a,b)=>a+b,0)/diffs.length);
-      }
-      return null;
-    }
-    const first = pts[0], last = pts[pts.length-1];
-    const days = (new Date(last.date)-new Date(first.date))/86400000;
-    return Math.round((last.personnel-first.personnel)/days);
-  }).filter(v=>v!==null);
-  const yLabels = ['2022','2023','2024','2025','2026 (máj.)'];
-
-  makeBar('c-yearly-avg', yLabels,
-    [{data:yearAvg, backgroundColor:yearAvg.map((v,i)=>['#2980b9','#2980b9','#e67e22','#c0392b','#a32d2d'][i]||'#c0392b'), borderRadius:4}],
-    v=>fmt(v)+' fő',
-    {plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.parsed.y)+' fő/nap átlag'}}}}
-  );
-
-  // Negyedéves veszteségi ráta
-  const deltas = MONTHLY.slice(1).map((d,i)=>d.personnel-MONTHLY[i].personnel);
-  const days_arr = MONTHLY.slice(1).map((d,i)=>(new Date(d.date)-new Date(MONTHLY[i].date))/86400000);
-  const dailyRates = deltas.map((d,i)=>Math.round(d/days_arr[i]));
-  const rLabels = MONTHLY.slice(1).map(d=>qLabel(d.date));
-  makeBar('c-monthly-rate', rLabels,
-    [{data:dailyRates, backgroundColor:dailyRates.map(v=>v>1500?'#a32d2d':v>1000?'#c0392b':v>600?'#e67e22':v>300?'#f39c12':'#2980b9'), borderRadius:3}],
-    v=>fmt(v)+'/nap',
-    {plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.parsed.y)+' fő/nap'}}}}
-  );
-
-  // Veszteség összetétel (%)
-  const compFields = ['tanks','afv','artillery','mlrs','planes','helicopters'];
-  const compColors = ['#e74c3c','#c0392b','#f39c12','#e67e22','#3498db','#9b59b6'];
-  const compLabels_names = ['Harckocsi','Páncélozott','Tüzérség','MLRS','Repülő','Helikopter'];
-  const compLabels = MONTHLY.map(d=>qLabel(d.date));
-  const totals = MONTHLY.map(d=>compFields.reduce((s,f)=>s+d[f],0));
-  const compDatasets = compFields.map((f,fi)=>({
-    label:compLabels_names[fi],
-    data:MONTHLY.map((d,i)=>totals[i]>0?Math.round(d[f]/totals[i]*100):0),
-    backgroundColor:compColors[fi], borderWidth:0, stack:'s'
+  // Cumulative personnel
+  makeChart('hist-personnel-chart', 'line', {
+    labels,
+    datasets: [{
+      label: 'Kumulált személyi veszteség',
+      data: MONTHLY.map(d => d.personnel),
+      borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,0.1)',
+      borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3
+    }]
+  }, mergeDefaults({
+    scales: { y: { ticks: { callback: v => fmt(v) } } }
   }));
-  if(charts['c-composition']) charts['c-composition'].destroy();
-  const elc = document.getElementById('c-composition'); if(elc) {
-    charts['c-composition'] = new Chart(elc, {
-      type:'bar', data:{labels:compLabels, datasets:compDatasets},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:true,labels:{color:TC,font:{size:10},boxWidth:10,padding:8}}},
-        scales:{
-          x:{stacked:true,ticks:{color:TC,font:{size:11},maxRotation:35},grid:{color:GC}},
-          y:{stacked:true,max:100,ticks:{color:TC,font:{size:11},callback:v=>v+'%'},grid:{color:GC}}
-        }
-      }
-    });
-  }
 
-  // Mérföldkövek
-  const milestones = [100000,250000,500000,750000,1000000,1250000];
-  const mlEl = document.getElementById('milestones-list');
-  if(mlEl) {
-    mlEl.innerHTML = milestones.map(m=>{
-      const pt = MONTHLY.find(d=>d.personnel>=m);
-      if(!pt) return '';
-      const dt = new Date(pt.date);
-      return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">
-        <span style="color:var(--muted)">${(m/1000).toFixed(0)}e fő</span>
-        <span>${dt.getFullYear()}. ${['jan','feb','már','ápr','máj','jún','júl','aug','szep','okt','nov','dec'][dt.getMonth()]}.</span>
-      </div>`;
-    }).join('');
-  }
+  // Tanks
+  makeChart('hist-tanks-chart', 'line', {
+    labels,
+    datasets: [{
+      label: 'Harckocsi',
+      data: MONTHLY.map(d => d.tanks),
+      borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)',
+      borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3
+    }]
+  }, mergeDefaults({}));
 
-  // Előrejelzés
-  const recentDiffs = getDiffs(DAILY,'personnel').slice(-7);
-  const avg7 = Math.round(recentDiffs.reduce((a,b)=>a+b,0)/recentDiffs.length);
-  const lastVal = DAILY[DAILY.length-1].personnel;
-  const lastDate = new Date(DAILY[DAILY.length-1].date);
-  const projEl = document.getElementById('projection-list');
-  if(projEl) {
-    const targets = [1400000,1500000,1750000,2000000];
-    projEl.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Jelenlegi 7 napos átlag: <b style="color:var(--text)">${fmt(avg7)} fő/nap</b></div>` +
-    targets.map(t=>{
-      if(t<=lastVal) return '';
-      const daysNeeded = Math.ceil((t-lastVal)/avg7);
-      const projDate = new Date(lastDate.getTime()+daysNeeded*86400000);
-      return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">
-        <span style="color:var(--muted)">${(t/1000000).toFixed(2)}M fő</span>
-        <span>~${projDate.getFullYear()}.${projDate.getMonth()+1}. (${daysNeeded} nap)</span>
-      </div>`;
-    }).join('');
+  // UAV
+  makeChart('hist-uav-chart', 'line', {
+    labels,
+    datasets: [{
+      label: 'UAV drón',
+      data: MONTHLY.map(d => d.uav),
+      borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)',
+      borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3
+    }]
+  }, mergeDefaults({
+    scales: { y: { ticks: { callback: v => fmt(v) } } }
+  }));
+
+  // Quarterly new losses
+  const qPersonnel = MONTHLY.map((d, i) => {
+    if (i === 0) return d.personnel;
+    return d.personnel - MONTHLY[i-1].personnel;
+  });
+  function qColor(v) {
+    if (v < 30000) return 'rgba(52,152,219,0.7)';
+    if (v < 70000) return 'rgba(243,156,18,0.7)';
+    if (v < 120000) return 'rgba(230,126,34,0.7)';
+    return 'rgba(192,57,43,0.8)';
   }
+  makeChart('hist-quarterly-chart', 'bar', {
+    labels,
+    datasets: [{
+      label: 'Negyedéves új személyi veszteség',
+      data: qPersonnel,
+      backgroundColor: qPersonnel.map(qColor),
+      borderWidth: 0
+    }]
+  }, mergeDefaults({
+    scales: { y: { ticks: { callback: v => fmt(v) } } },
+    plugins: { legend: { display: false } }
+  }));
 }
 
-// ==================== HEATMAP ====================
-function buildHeatmap(containerId, field) {
-  const container = document.getElementById(containerId);
-  if(!container) return;
-  container.innerHTML = '';
+// ============================================================
+//  EQUIPMENT
+// ============================================================
+let logScale = false;
 
-  const diffs = getDiffs(DAILY, field);
-  const posVals = diffs.filter(v=>v>0);
-  const maxV = Math.max(...posVals);
-  const minV = Math.min(...posVals);
+function toggleLog() {
+  logScale = !logScale;
+  document.getElementById('logToggle').textContent = 'Logaritmikus skála: ' + (logScale ? 'BE' : 'KI');
+  renderEquipment();
+}
 
-  function color(v) {
-    if(v<=0) return 'rgba(255,255,255,0.06)';
-    const t = Math.min(1,(v-minV)/(maxV-minV+0.001));
-    if(field==='personnel') return `hsl(0,${Math.round(50+t*50)}%,${Math.round(25+t*30)}%)`;
-    if(field==='uav') return `hsl(130,${Math.round(50+t*50)}%,${Math.round(18+t*28)}%)`;
-    return `hsl(210,${Math.round(50+t*50)}%,${Math.round(20+t*30)}%)`;
-  }
+function renderEquipment() {
+  const last = DAILY[DAILY.length - 1];
+  const categories = [
+    { label: 'UAV drón', value: last.uav, color: '#27ae60' },
+    { label: 'Jármű', value: last.vehicles, color: '#95a5a6' },
+    { label: 'Páncélozott harcjármű (APV/IFV)', value: last.afv, color: '#e67e22' },
+    { label: 'Tüzérség', value: last.artillery, color: '#f39c12' },
+    { label: 'Harckocsi', value: last.tanks, color: '#e74c3c' },
+    { label: 'Cirkálórakéta', value: last.missiles, color: '#1abc9c' },
+    { label: 'MLRS', value: last.mlrs, color: '#e74c3c' },
+    { label: 'Repülő', value: last.planes, color: '#3498db' },
+    { label: 'Légivédelem', value: last.airdef, color: '#2980b9' },
+    { label: 'Helikopter', value: last.helicopters, color: '#9b59b6' },
+    { label: 'Robotrendszer / speciális', value: last.robots || 0, color: '#7f8c8d' },
+    { label: 'Hajó', value: last.ships, color: '#16a085' },
+    { label: 'Tengeralattjáró', value: last.submarines, color: '#1a5276' }
+  ].sort((a,b) => b.value - a.value);
 
-  const DAYS = ['H','K','Sz','Cs','P','Sz','V'];
-  const startDow = (new Date(DAILY[0].date).getDay()+6)%7;
-  const total = Math.ceil((DAILY.length+startDow)/7)*7;
-
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;gap:0;align-items:flex-start;';
-
-  // Day-of-week labels
-  const rowLabels = document.createElement('div');
-  rowLabels.style.cssText = 'display:flex;flex-direction:column;margin-right:4px;margin-top:20px;';
-  DAYS.forEach((d,i)=>{
-    const l = document.createElement('div');
-    l.style.cssText = 'height:16px;line-height:16px;font-size:9px;color:rgba(255,255,255,0.4);text-align:right;margin-bottom:2px;width:12px;';
-    l.textContent = i%2===0?d:'';
-    rowLabels.appendChild(l);
+  makeChart('eq-bar-chart', 'bar', {
+    labels: categories.map(c => c.label),
+    datasets: [{ label: 'Kumulált veszteség', data: categories.map(c => c.value), backgroundColor: categories.map(c => c.color) }]
+  }, {
+    indexAxis: 'y',
+    responsive: false,
+    maintainAspectRatio: false,
+    animation: false,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+    scales: {
+      x: {
+        type: logScale ? 'logarithmic' : 'linear',
+        ticks: { color: '#6b7080', font: { size: 10 }, callback: v => fmt(v) },
+        grid: { color: 'rgba(255,255,255,0.05)' }
+      },
+      y: { ticks: { color: '#8b8fa8', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } }
+    }
   });
-  wrap.appendChild(rowLabels);
 
-  let colIdx = -startDow;
-  let col = null;
+  // Air losses quarterly
+  const qlabels = MONTHLY.map(d => qLabel(d.date));
+  makeChart('eq-air-chart', 'line', {
+    labels: qlabels,
+    datasets: [
+      { label: 'Repülő', data: MONTHLY.map(d=>d.planes), borderColor:'#3498db', backgroundColor:'rgba(52,152,219,0.1)', borderWidth:2, pointRadius:3, fill:true, tension:0.3 },
+      { label: 'Helikopter', data: MONTHLY.map(d=>d.helicopters), borderColor:'#9b59b6', backgroundColor:'rgba(155,89,182,0.1)', borderWidth:2, pointRadius:3, fill:true, tension:0.3 }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } } }));
 
-  for(let i=0;i<total;i++){
-    if(i%7===0){
-      col = document.createElement('div');
-      col.style.cssText = 'display:flex;flex-direction:column;margin-right:2px;';
-      const topLabel = document.createElement('div');
-      topLabel.style.cssText = 'height:18px;font-size:9px;color:rgba(255,255,255,0.5);line-height:18px;white-space:nowrap;';
-      if(colIdx>=0&&colIdx<DAILY.length){
-        const d=new Date(DAILY[colIdx].date);
-        if(d.getDate()<=7) topLabel.textContent=`${d.getMonth()+1}.hó`;
-      }
-      col.appendChild(topLabel);
-      wrap.appendChild(col);
+  // Artillery & MLRS quarterly
+  makeChart('eq-arty-chart', 'line', {
+    labels: qlabels,
+    datasets: [
+      { label: 'Tüzérség', data: MONTHLY.map(d=>d.artillery), borderColor:'#f39c12', backgroundColor:'rgba(243,156,18,0.1)', borderWidth:2, pointRadius:3, fill:true, tension:0.3 },
+      { label: 'MLRS', data: MONTHLY.map(d=>d.mlrs), borderColor:'#e74c3c', backgroundColor:'rgba(231,76,60,0.1)', borderWidth:2, pointRadius:3, fill:true, tension:0.3 }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } }, scales: { y: { ticks: { callback: v => fmt(v) } } } }));
+}
+
+// ============================================================
+//  ANALYTICS
+// ============================================================
+function renderAnalytics() {
+  // Annual avg daily losses
+  // 2022: Q1(17500, ~35 days) -> 2022 end 105960 → (105960/316 days)
+  // Better: use consecutive quarterly diffs
+  const lastDaily = DAILY[DAILY.length - 1];
+  const todayDate = new Date(lastDaily.date);
+  const annualData = [
+    { year: '2022', avg: Math.round((105960) / 316) },
+    { year: '2023', avg: Math.round((359230 - 105960) / 365) },
+    { year: '2024', avg: Math.round((789550 - 359230) / 366) },
+    { year: '2025', avg: Math.round((1207910 - 789550) / 365) },
+    { year: '2026 YTD', avg: Math.round((lastDaily.personnel - 1207910) / ((todayDate - new Date('2025-12-31')) / 86400000)) }
+  ];
+
+  makeChart('an-annual-chart', 'bar', {
+    labels: annualData.map(d => d.year),
+    datasets: [{
+      label: 'Átlagos napi személyi veszteség',
+      data: annualData.map(d => d.avg),
+      backgroundColor: annualData.map((d,i) => `rgba(192,57,43,${0.4 + i*0.12})`)
+    }]
+  }, mergeDefaults({ plugins: { legend: { display: false } } }));
+
+  // Quarterly loss rate (personnel)
+  const qLabels = MONTHLY.map(d => qLabel(d.date));
+  const qRates = MONTHLY.map((d, i) => {
+    if (i === 0) {
+      const days = (new Date(d.date) - WAR_START) / 86400000;
+      return Math.round(d.personnel / days);
     }
-    const cell = document.createElement('div');
-    cell.style.cssText = 'width:16px;height:16px;border-radius:3px;margin-bottom:2px;cursor:default;transition:opacity .1s;';
-    if(colIdx<0||colIdx>=DAILY.length){
-      cell.style.background='transparent';
-    } else {
-      const v=diffs[colIdx];
-      cell.style.background=color(v);
-      const d=DAILY[colIdx];
-      const mo=['jan','feb','már','ápr','máj','jún','júl','aug','szep','okt','nov','dec'];
-      cell.title=`${mo[new Date(d.date).getMonth()]}. ${new Date(d.date).getDate()}: +${fmt(v>0?v:0)}`;
-      cell.addEventListener('mouseenter',()=>cell.style.opacity='0.75');
-      cell.addEventListener('mouseleave',()=>cell.style.opacity='1');
-    }
-    col.appendChild(cell);
-    colIdx++;
+    const days = (new Date(d.date) - new Date(MONTHLY[i-1].date)) / 86400000;
+    return Math.round((d.personnel - MONTHLY[i-1].personnel) / days);
+  });
+
+  makeChart('an-quarterly-chart', 'bar', {
+    labels: qLabels,
+    datasets: [{
+      label: 'Napi ütem (személyi)',
+      data: qRates,
+      backgroundColor: qRates.map(v => v > 1000 ? 'rgba(192,57,43,0.8)' : v > 600 ? 'rgba(230,126,34,0.7)' : 'rgba(243,156,18,0.6)')
+    }]
+  }, mergeDefaults({ plugins: { legend: { display: false } } }));
+
+  // Loss composition stacked %
+  const compFields = ['personnel','tanks','afv','artillery','uav'];
+  const compColors = ['#c0392b','#e74c3c','#e67e22','#f39c12','#27ae60'];
+  const compLabels = ['Személyi','Harckocsi','AFV','Tüzérség','UAV'];
+  // normalize to % of total for each quarter (excluding personnel for scale)
+  // use only equipment categories
+  function compPct(d, i) {
+    const prev = i === 0 ? {tanks:0,afv:0,artillery:0,uav:0} : MONTHLY[i-1];
+    const deltas = {
+      tanks: d.tanks - prev.tanks,
+      afv: d.afv - prev.afv,
+      artillery: d.artillery - prev.artillery,
+      uav: d.uav - prev.uav
+    };
+    const total = Object.values(deltas).reduce((a,b)=>a+b,0);
+    if (total === 0) return {tanks:0,afv:0,artillery:0,uav:0};
+    const pct = {};
+    for (const k in deltas) pct[k] = Math.round(deltas[k]/total*100);
+    return pct;
   }
-  container.appendChild(wrap);
+
+  const compDatasets = [
+    { label:'Harckocsi', field:'tanks', color:'#e74c3c' },
+    { label:'AFV', field:'afv', color:'#e67e22' },
+    { label:'Tüzérség', field:'artillery', color:'#f39c12' },
+    { label:'UAV', field:'uav', color:'#27ae60' }
+  ].map(ds => ({
+    label: ds.label,
+    data: MONTHLY.map((d,i) => compPct(d,i)[ds.field]),
+    backgroundColor: ds.color,
+    stack: 'comp'
+  }));
+
+  makeChart('an-composition-chart', 'bar', {
+    labels: qLabels,
+    datasets: compDatasets
+  }, mergeDefaults({
+    plugins: { legend: { display: true } },
+    scales: { x: { stacked: true }, y: { stacked: true, max: 100, ticks: { callback: v => v + '%' } } }
+  }));
+
+  // MILESTONES TABLE
+  const milestones = [100000,250000,500000,750000,1000000,1250000];
+  const allData = [...MONTHLY, ...DAILY];
+  const mtbody = document.querySelector('#milestoneTable tbody');
+  mtbody.innerHTML = milestones.map(m => {
+    const found = allData.find(d => d.personnel >= m);
+    if (found) {
+      return `<tr><td>${fmtFull(m)}</td><td class="milestone-reached">${found.date}</td><td>${warDay(found.date)}</td></tr>`;
+    }
+    return `<tr><td>${fmtFull(m)}</td><td>—</td><td>—</td></tr>`;
+  }).join('');
+
+  // PROJECTIONS — 3-scenario mechanikus kivetítés
+  const last = DAILY[DAILY.length - 1];
+  const pDeltas = dailyDeltas(DAILY, 'personnel');
+  const avg7 = pDeltas.slice(-7).reduce((a,b)=>a+b,0)/7;
+  const avg30proj = pDeltas.reduce((a,b)=>a+b,0)/pDeltas.length;
+  // 90-day avg from last 2 MONTHLY points
+  const mLenP = MONTHLY.length;
+  const mP1 = MONTHLY[mLenP-1]; const mP2 = MONTHLY[mLenP-2];
+  const daysBetweenP = (new Date(mP1.date) - new Date(mP2.date)) / 86400000;
+  const avg90proj = (mP1.personnel - mP2.personnel) / daysBetweenP;
+  const projTargets = [1400000,1500000,1750000,2000000];
+  const ptbody = document.querySelector('#projectionTable tbody');
+  const today = new Date(DAILY[DAILY.length - 1].date);
+  ptbody.innerHTML = projTargets.map(t => {
+    if (last.personnel >= t) return `<tr><td>${fmtFull(t)}</td><td class="milestone-reached" colspan="3">Elért</td></tr>`;
+    function proj(rate) {
+      const d = Math.ceil((t - last.personnel) / rate);
+      const dt = new Date(today); dt.setDate(dt.getDate() + d);
+      return dt.toISOString().slice(0,10);
+    }
+    return `<tr><td>${fmtFull(t)}</td><td class="milestone-projected">${proj(avg7)}</td><td class="milestone-projected">${proj(avg30proj)}</td><td class="milestone-projected">${proj(avg90proj)}</td></tr>`;
+  }).join('');
+
+  // CONTEXT TABLE
+  const contexts = [
+    { period: '2022 febr.–jún.', note: 'Invázió kezdete, gyors előrenyomulás, majd visszavonulás Kijevtől', avg: Math.round((35600)/120) },
+    { period: '2022 júl.–dec.', note: 'Harkiv ellentámadás, Herszoni visszavonulás', avg: Math.round((105960-35600)/184) },
+    { period: '2023 jún.–szept.', note: 'Ukrán nyári ellentámadás — kis területi nyereséggel', avg: Math.round((278130-228340)/92) },
+    { period: '2024 jan.–márc.', note: 'Avdijivka eleste, orosz nyomás a Donbaszon', avg: Math.round((442170-359230)/91) },
+    { period: '2024 okt.–dec.', note: 'Kurzki hadművelet, fokozódó légi intenzitás', avg: Math.round((789550-653060)/92) },
+    { period: '2025 jan.–márc.', note: 'Magas intenzitású frontális nyomás', avg: Math.round((915230-789550)/90) },
+    { period: '2026 máj.', note: 'Jelenlegi időszak (napi adatok elérhetők)', avg: Math.round(avg7) }
+  ];
+  document.querySelector('#contextTable tbody').innerHTML = contexts.map(c =>
+    `<tr><td>${c.period}</td><td>${c.note}</td><td>${fmtFull(c.avg)}</td></tr>`
+  ).join('');
+}
+
+// ============================================================
+//  HEATMAP
+// ============================================================
+let hmField = 'personnel';
+let hmBarChart = null;
+
+function setHmField(field, btn) {
+  hmField = field;
+  document.querySelectorAll('#hmFilter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHeatmapContent();
+}
+
+function renderHeatmap() {
+  renderHeatmapContent();
+}
+
+function renderHeatmapContent() {
+  const fieldLabels = {
+    personnel: 'Személyi veszteség',
+    uav: 'UAV drón',
+    artillery: 'Tüzérség',
+    afv: 'Páncélozott (AFV)'
+  };
+  document.getElementById('hmTitle').textContent = fieldLabels[hmField] + ' — napi hőtérkép (2026 május)';
+  document.getElementById('hmBarTitle').textContent = 'Napi ' + fieldLabels[hmField].toLowerCase() + ' (máj. 2026)';
+
+  // compute deltas
+  function getDeltas(field) {
+    const res = [];
+    for (let i = 0; i < DAILY.length; i++) {
+      const prev = i === 0 ? MONTHLY[MONTHLY.length-1][field] : DAILY[i-1][field];
+      let delta = Math.max(0, DAILY[i][field] - prev);
+      if (field === 'robots' && prev === 0 && delta > 100) delta = 0;
+      res.push(delta);
+    }
+    return res;
+  }
+
+  const deltas = getDeltas(hmField);
+  const avg = deltas.reduce((a,b)=>a+b,0)/deltas.length;
+  const mn = Math.min(...deltas);
+  const mx = Math.max(...deltas);
+
+  function hmColor(v) {
+    const t = (mx - mn) < 1 ? 0.5 : (v - mn) / (mx - mn);
+    // blue (low) → yellow → red (high)
+    if (t < 0.33) {
+      const tt = t/0.33;
+      return `rgba(${Math.round(30+40*tt)},${Math.round(100+56*tt)},${Math.round(180-60*tt)},0.9)`;
+    } else if (t < 0.66) {
+      const tt = (t-0.33)/0.33;
+      return `rgba(${Math.round(70+130*tt)},${Math.round(156+43*tt)},${Math.round(120-100*tt)},0.9)`;
+    } else {
+      const tt = (t-0.66)/0.34;
+      return `rgba(${Math.round(200+55*tt)},${Math.round(199-160*tt)},${Math.round(20)},0.9)`;
+    }
+  }
+
+  const tooltip = document.getElementById('tooltip');
+  const container = document.getElementById('hmContainer');
+
+  // Build 7-col grid (weeks)
+  const cells = DAILY.map((d, i) => {
+    const v = deltas[i];
+    const dev = avg > 0 ? ((v - avg)/avg*100).toFixed(1) : 0;
+    const sign = dev > 0 ? '+' : '';
+    return { date: d.date, v, dev, sign, color: hmColor(v), dayLabel: dayLabel(d.date) };
+  });
+
+  // 7 columns = days of week (Mon–Sun approx)
+  // May 2026: starts on Friday = col index 4 (0=Mon)
+  const startDow = 4; // Friday
+  const totalCols = 7;
+  const dayNames = ['H','K','Sz','Cs','P','Sz','V'];
+
+  let html = `<div class="hm-labels">${dayNames.map(n=>`<div class="hm-label">${n}</div>`).join('')}</div>`;
+
+  // pad start
+  const padded = Array(startDow).fill(null).concat(cells);
+  const rows = Math.ceil(padded.length / totalCols);
+
+  html += `<div class="heatmap-grid" style="grid-template-columns:repeat(${totalCols},18px);">`;
+  padded.forEach((c, idx) => {
+    if (!c) {
+      html += `<div style="width:16px;height:16px;"></div>`;
+    } else {
+      html += `<div class="hm-cell" style="background:${c.color};"
+        data-date="${c.date}" data-val="${c.v}" data-dev="${c.dev}" data-sign="${c.sign}" data-label="${c.dayLabel}"></div>`;
+    }
+  });
+  html += '</div>';
+
+  container.innerHTML = html;
 
   // Legend
-  const legId = field==='personnel'?'hm-leg-p':null;
-  if(legId){
-    const leg=document.getElementById(legId);
-    if(leg){
-      leg.innerHTML='';
-      [0,.2,.4,.6,.8,1].forEach(t=>{
-        const c=document.createElement('div');
-        c.style.cssText=`width:16px;height:16px;border-radius:3px;background:hsl(0,${Math.round(50+t*50)}%,${Math.round(25+t*30)}%);`;
-        leg.appendChild(c);
-      });
-    }
+  const lgStops = 20;
+  let lgHtml = '<span>Alacsony</span><div class="hm-legend-bar">';
+  for (let i = 0; i < lgStops; i++) {
+    const t = i / (lgStops - 1);
+    const v = mn + t * (mx - mn);
+    lgHtml += `<div class="hm-legend-cell" style="background:${hmColor(v)};"></div>`;
   }
+  lgHtml += `</div><span>Magas (max: ${fmtFull(mx)})</span>`;
+  document.getElementById('hmLegend').innerHTML = lgHtml;
+
+  // Tooltip events
+  container.querySelectorAll('.hm-cell').forEach(el => {
+    el.addEventListener('mouseenter', e => {
+      const r = el.getBoundingClientRect();
+      tooltip.style.display = 'block';
+      tooltip.innerHTML = `<strong>${el.dataset.label} (${el.dataset.date})</strong><br>Napi veszteség: <strong>${fmtFull(+el.dataset.val)}</strong><br>Átlagtól: ${el.dataset.sign}${el.dataset.dev}%`;
+      tooltip.style.left = (r.right + 8) + 'px';
+      tooltip.style.top = (r.top - 8) + 'px';
+    });
+    el.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+  });
+
+  // Top 5 most intense days (personnel)
+  const personnelDeltas = [];
+  for (let i = 0; i < DAILY.length; i++) {
+    const prev = i === 0 ? MONTHLY[MONTHLY.length-1].personnel : DAILY[i-1].personnel;
+    personnelDeltas.push({ date: DAILY[i].date, val: Math.max(0, DAILY[i].personnel - prev) });
+  }
+  const top5 = personnelDeltas.slice().sort((a,b) => b.val - a.val).slice(0,5);
+  const top5el = document.getElementById('hmTop5');
+  if (top5el) {
+    top5el.innerHTML = top5.map(d => `<li><strong>${d.date}</strong> — +${fmtFull(d.val)} fő</li>`).join('');
+  }
+
+  // Bar chart
+  const labels = DAILY.map(d => dayLabel(d.date));
+  const fieldColors = { personnel:'rgba(192,57,43,0.7)', uav:'rgba(39,174,96,0.7)', artillery:'rgba(243,156,18,0.7)', afv:'rgba(230,126,34,0.7)' };
+
+  destroyChart('hm-bar-chart');
+  const ctx = document.getElementById('hm-bar-chart');
+  chartInstances['hm-bar-chart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: fieldLabels[hmField],
+        data: deltas,
+        backgroundColor: fieldColors[hmField]
+      }]
+    },
+    options: mergeDefaults({ plugins: { legend: { display: false } } })
+  });
 }
 
-function renderHeatmapDaily(field) {
-  const labels = DAILY.map(d=>dayLabel(d.date));
-  const diffs = getDiffs(DAILY, field).map((v,i)=>i===0?null:v);
-  makeBar('c-hm-daily', labels.slice(1), [{
-    data: diffs.slice(1),
-    backgroundColor: diffs.slice(1).map(v=>{
-      if(field==='personnel') return v>=1400?'#a32d2d':v>=1100?'#c0392b':'#2980b9';
-      if(field==='uav') return '#27ae60';
-      if(field==='artillery') return '#f39c12';
-      return '#8e44ad';
-    }),
-    borderRadius:3
-  }], v=>fmt(v), {plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' +'+fmt(ctx.parsed.y)}}}});
-}
-
-function setHmField(f, btn) {
-  hmField = f;
-  document.querySelectorAll('#page-heatmap .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderHeatmapDaily(f);
-}
-
-// ==================== TAB SWITCHING ====================
-function switchTab(id, btn) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  btn.classList.add('active');
-  setTimeout(()=>{
-    if(id==='trends') renderTrendCharts();
-    if(id==='history') { renderHistoryCharts(); rendered.history=true; }
-    if(id==='equipment') { renderEquipmentCharts(); rendered.equipment=true; }
-    if(id==='analytics') { renderAnalytics(); rendered.analytics=true; }
-    if(id==='heatmap') {
-      buildHeatmap('heatmap-personnel','personnel');
-      buildHeatmap('heatmap-uav','uav');
-      renderHeatmapDaily('personnel');
-      rendered.heatmap=true;
-    }
-  }, 50);
-}
-
-function setDailyRange(n, btn) {
-  dailyRange = n;
-  document.querySelectorAll('#page-trends .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderTrendCharts();
-}
-
-// ==================== CSV EXPORT ====================
+// ============================================================
+//  CSV EXPORT
+// ============================================================
 function exportCSV() {
-  const fields = ['date','personnel','tanks','afv','artillery','mlrs','airdef','planes','helicopters','uav','missiles','ships','submarines','vehicles','special','robots'];
-  const header = fields.join(',');
-  const rows = DAILY.map(d=>fields.map(f=>d[f]??'').join(','));
-  const csv = [header,...rows].join('\n');
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const header = 'date,war_day,personnel_total,personnel_daily,tanks_total,tanks_daily,artillery_total,artillery_daily,uav_total,uav_daily,source_url\n';
+  const rows = DAILY.map((d, i) => {
+    const prev = i === 0 ? MONTHLY[MONTHLY.length-1] : DAILY[i-1];
+    return [
+      d.date,
+      warDay(d.date),
+      d.personnel,
+      Math.max(0, d.personnel - prev.personnel),
+      d.tanks,
+      Math.max(0, d.tanks - prev.tanks),
+      d.artillery,
+      Math.max(0, d.artillery - prev.artillery),
+      d.uav,
+      Math.max(0, d.uav - prev.uav),
+      'https://index.minfin.com.ua/ua/reference/casualties/'
+    ].join(',');
+  });
+  const csv = header + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href=url; a.download='ukraine-war-losses.csv'; a.click();
+  a.href = url; a.download = 'ua-war-losses-2026-05.csv'; a.click();
   URL.revokeObjectURL(url);
 }
 
-// ==================== START ====================
-init();
+// ============================================================
+//  INITIAL RENDER
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  renderOverview();
+});
+
+// Ablak átméretezésekor újrarajzolás (responsive:false esetén manuálisan kell)
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    Object.keys(chartInstances).forEach(id => {
+      sizeCanvas(id);
+      chartInstances[id].resize();
+    });
+  }, 150);
+});
 </script>
 </body>
 </html>
