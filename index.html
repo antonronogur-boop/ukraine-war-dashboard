@@ -108,6 +108,10 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .hm-legend-bar{display:flex;gap:1px;}
 .hm-legend-cell{width:12px;height:12px;border-radius:1px;}
 
+/* SO-WHAT ANALYTICAL TEXT */
+.so-what{background:rgba(52,152,219,0.07);border-left:3px solid rgba(52,152,219,0.35);border-radius:0 6px 6px 0;padding:10px 14px;margin-top:10px;font-size:12px;color:#9bb3cc;line-height:1.6;}
+.so-what strong{color:#5dade2;}
+
 /* METHODOLOGY */
 .meth-section{margin-bottom:20px;}
 .meth-section h3{font-size:14px;font-weight:700;margin-bottom:8px;color:#3498db;}
@@ -183,23 +187,24 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="chart-wrap">
       <div class="chart-title">Napi személyi veszteség (máj. 2026) + 7 napos átlag</div>
       <canvas id="ov-personnel-chart" height="180"></canvas>
-      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
+      <div class="so-what">A piros oszlopok az 1 400 fő feletti kiugróan magas napokat jelölik. A fehér gördülő átlagvonal simítja a napi ingadozásokat — <strong>ez a releváns trendmutató, nem az egyedi napok</strong>. Ezek ukrán vezérkari közlések, nem független verifikáció.</div>
     </div>
     <div class="chart-wrap">
       <div class="chart-title">Napi UAV veszteség (máj. 2026) + 7 napos átlag</div>
       <canvas id="ov-uav-chart" height="180"></canvas>
-      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
+      <div class="so-what">A magas drónveszteség elsősorban az orosz UAV-alkalmazás volumenének növekedésével magyarázható, nem feltétlenül hatékonyabb ukrán légvédelemmel. <strong>Egy elveszített drón értéke töredéke egy harckocsiénak</strong> — ezért az abszolút szám önmagában keveset mond az erőviszonyokról.</div>
     </div>
   </div>
   <div class="grid2">
     <div class="chart-wrap">
       <div class="chart-title">Napi tüzérségi veszteség (máj. 2026)</div>
       <canvas id="ov-arty-chart" height="180"></canvas>
+      <div class="so-what">A tüzérségi veszteségek magas szintje az ellenütegelési harc intenzitásával és a <strong>felderítés-csapás ciklus rövidülésével</strong> hozható összefüggésbe. Nem minden magas érték jelent automatikusan ukrán tüzérségi fölényt.</div>
     </div>
     <div class="chart-wrap">
       <div class="chart-title">Napi harckocsi + IFV veszteség (máj. 2026)</div>
       <canvas id="ov-armor-chart" height="180"></canvas>
-      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
+      <div class="so-what">A nehézeszköz-veszteségek viszonylag alacsony napi rátája nem feltétlenül javuló túlélést jelent — <strong>az alacsonyabb bevonás vagy más taktikai döntések</strong> is magyarázhatják. A páncélos és tüzérségi veszteség együtt értelmezve informatívabb.</div>
     </div>
   </div>
 
@@ -241,23 +246,30 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <p>A historikus adatok negyedéves/hónapvégi rögzített értékek (17 adatpont, 2022 márc.–2026 ápr.). Az X-tengelyen negyedéves formátum látható.</p>
   </div>
   <div class="chart-wrap">
-    <div class="chart-title">Kumulált személyi veszteség (negyedéves)</div>
+    <div class="chart-title">Kumulált személyi veszteség (negyedéves) — esemény-idővonallal</div>
     <canvas id="hist-personnel-chart" height="200"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;font-size:11px;color:var(--muted);">
+      <span>🟢 Ukrán offenzíva</span><span>🔵 Ellentámadás</span><span>🟡 Orosz offenzíva</span>
+    </div>
+    <div class="so-what">A görbe 2024 Q3-tól láthatóan meredekebb — a veszteségi ütem gyorsult. <strong>A meredekség változása fontosabb mutató, mint az abszolút szám.</strong> A sárga és zöld függőleges vonalak kulcs hadműveleti eseményeket jelölnek. Részleges negyedévek (*) óvatosan kezelendők.</div>
   </div>
   <div class="grid2">
     <div class="chart-wrap">
       <div class="chart-title">Harckocsi veszteség (negyedéves)</div>
       <canvas id="hist-tanks-chart" height="200"></canvas>
+      <div class="so-what">A harckocsi-veszteségek növekedési üteme 2024-től <strong>lassult</strong>, ami részben készletkorlátot, részben más taktikát (gyalogság előtérbe helyezése) tükrözhet.</div>
     </div>
     <div class="chart-wrap">
       <div class="chart-title">UAV veszteség — meredeken gyorsuló növekedés</div>
       <canvas id="hist-uav-chart" height="200"></canvas>
+      <div class="so-what">Az exponenciálisan növekvő drónveszteség a <strong>drónhadviselés tömegesedését</strong> jelzi — mind az alkalmazás, mind az elveszítés szempontjából. 2025-re az UAV a legtöbb veszteséget mutató kategória lett.</div>
     </div>
   </div>
   <div class="chart-wrap">
-    <div class="chart-title">Negyedéves új veszteség (személyi, negyedévenként) — intenzitás szerint színezve</div>
+    <div class="chart-title">Negyedéves új veszteség (személyi) — intenzitás szerint színezve</div>
     <canvas id="hist-quarterly-chart" height="180"></canvas>
     <p class="chart-note">* Részleges negyedév</p>
+    <div class="so-what">A 2024 Q4 – 2026 Q2 kiugróan magas értékei egybeesnek a fokozott orosz keleti offenzívával. Az oszlopok intenzitásszínezése lehetővé teszi a <strong>periódusok gyors összehasonlítását</strong> — a sötétpiros negyedévek a legintenzívebb időszakok.</div>
   </div>
 </div>
 </div>
@@ -330,6 +342,23 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <tbody></tbody>
     </table>
   </div>
+
+  <!-- RELATÍV MUTATÓK -->
+  <div class="section-title" style="margin-top:24px;">Relatív mutatók és összehasonlítás</div>
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Heti veszteségi ráta változása (%) — személyi</div>
+      <div class="chart-note">Aktuális 7 napos átlag vs előző 7 nap: pozitív = gyorsulás, negatív = lassulás</div>
+      <canvas id="an-weekly-accel" height="180"></canvas>
+      <div class="so-what">A <strong>pozitív (piros) oszlopok</strong> heti gyorsulást jeleznek, a negatív (zöld) lassulást. A tartósan pozitív periódusok fokozódó harci intenzitásra utalhatnak — de rövid tüskék adatjelentési késésekből is fakadhatnak.</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Éves napi átlag összehasonlítása — főbb kategóriák</div>
+      <div class="chart-note">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</div>
+      <canvas id="an-period-compare" height="180"></canvas>
+      <div class="so-what">Az éves napi átlagok összehasonlítása megmutatja, <strong>melyik évben melyik kategória vált kiemelkedővé</strong>. A 2026-os adat csak az elért hónapok átlaga (YTD) — közvetlen évenkénti összehasonlításhoz használd óvatosan.</div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -392,9 +421,10 @@ tr:hover td{background:rgba(255,255,255,0.02);}
   </div>
 
   <div class="chart-wrap">
-    <div class="chart-title">MoD bejelentett vs Oryx igazolt — harckocsi összehasonlítás</div>
+    <div class="chart-title">MoD bejelentett vs Oryx igazolt — főkategóriák összehasonlítása</div>
     <div class="chart-note">⚠️ Az ukrán vezérkari szám nem verifikált összesítés; az Oryx szám fotóbizonyítékon alapul. A valóság a kettő között van.</div>
     <canvas id="oryx-gap-bar" style="height:200px;"></canvas>
+    <div class="so-what">A bejelentett és vizuálisan igazolt veszteségek között <strong>jellemzően 2–3-szoros különbség</strong> mutatkozik. Ez nem feltétlenül tudatos túlzást jelent — a harctéri azonosítás és dokumentálás módszertani korlátaiból is fakadhat. <strong>Mindkét szám alulbecslés</strong>: az Oryx csak azt rögzíti, amihez kép létezik és nyilvánosan elérhető.</div>
   </div>
 
   <div class="grid2">
@@ -414,6 +444,30 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="chart-title">Zsákmányolt vs megsemmisített arány — Oroszország</div>
     <div class="chart-note">Az Oryx dokumentál zsákmányolt (captured) eszközöket is — ez egy ritkán látott mutató</div>
     <canvas id="oryx-captured-bar" style="height:200px;"></canvas>
+    <div class="so-what">A zsákmányolt eszközök aránya <strong>elemzői szempontból kiemelten értékes</strong>: az elhagyott vagy zsákmányolt harckocsi nem csupán saját veszteség, hanem potenciális ukrán eszköz. A magas zsákmányolási arány egyes kategóriákban (pl. speciális jármű) a gyors visszavonulásra utalhat.</div>
+  </div>
+
+  <!-- TÍPUSBONTÁS -->
+  <div class="section-title" style="margin-top:24px;">Típusbontás — melyik eszköz veszett el a legtöbbet?</div>
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Top harckocsi típusok — Oroszország (Oryx igazolt)</div>
+      <div class="chart-note" id="oryx-tank-types-note">Adatok betöltése...</div>
+      <canvas id="oryx-tank-types" style="height:320px;"></canvas>
+      <div class="so-what">A <strong>T-80BV dominanciája</strong> meglepő — ez a típus főleg tartalékos egységeknél és 2. vonalban jelenik meg. A T-72B3 és T-72B együttese a hadsereg főhadrendszerének kopását jelzi. A <strong>T-90M megjelenése</strong> a listán arra utal, hogy Oroszország legmodernebb harckocsija is veszteségeket szenved.</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Harckocsi-összetétel: modern vs klasszikus</div>
+      <div class="chart-note">Modern = T-80BVM, T-90M, T-72B3 Obr.2022 variánsok | Klasszikus = T-62, T-64, T-72B stb.</div>
+      <canvas id="oryx-tank-modern" style="height:280px;"></canvas>
+      <div class="so-what">A modern típusok arányának növekedése azt jelzi, hogy Oroszország <strong>egyre inkább prémium eszközeit is bevetni kényszerül</strong>. Az ismeretlen kategória magas aránya a vizuális azonosítás nehézségeit tükrözi.</div>
+    </div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Top repülőgép veszteségek — Oroszország vs Ukrajna (Oryx igazolt)</div>
+    <div class="chart-note">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</div>
+    <canvas id="oryx-plane-types" style="height:220px;"></canvas>
+    <div class="so-what">Az <strong>Su-25 csatarepülő</strong> veszteségeinek magas aránya az alacsony magasságú közellégi támogatás kockázatosságát jelzi. Az <strong>Su-34 strike aircraft</strong> megjelenése a top listán arra utal, hogy Oroszország értékes csapásmérő eszközöket is elveszít rendszeresen.</div>
   </div>
 
 </div>
@@ -553,6 +607,43 @@ function dayLabel(dateStr) {
   const months = ['jan.','febr.','márc.','ápr.','máj.','jún.','júl.','aug.','szept.','okt.','nov.','dec.'];
   return months[d.getMonth()] + d.getDate() + '.';
 }
+
+// ── Esemény-idővonal plugin (Chart.js custom plugin) ──────────────
+const KEY_EVENTS = [
+  { label: '2022 Q3*', shortLabel: '2022 Q3', name: 'Kharkiv offenzíva', color: 'rgba(46,204,113,0.75)' },
+  { label: '2022 Q4', shortLabel: '2022 Q4', name: 'Kherson felszabadítás', color: 'rgba(46,204,113,0.75)' },
+  { label: '2023 Q2', shortLabel: '2023 Q2', name: 'Ukrán ellentámadás', color: 'rgba(52,152,219,0.75)' },
+  { label: '2024 Q3', shortLabel: '2024 Q3', name: 'Kursk hadművelet', color: 'rgba(241,196,15,0.85)' },
+  { label: '2025 Q1', shortLabel: '2025 Q1', name: 'Fokozott intenzitás', color: 'rgba(231,76,60,0.7)' },
+];
+
+const eventLinesPlugin = {
+  id: 'eventLines',
+  afterDraw(chart) {
+    if (!chart.config.options._eventLines) return;
+    const { ctx, chartArea, scales } = chart;
+    if (!scales.x || !chartArea) return;
+    chart.config.options._eventLines.forEach(ev => {
+      const idx = chart.data.labels.findIndex(l => l === ev.label || l === ev.shortLabel + '*' || l === ev.shortLabel);
+      if (idx < 0) return;
+      const x = scales.x.getPixelForTick(idx);
+      ctx.save();
+      ctx.strokeStyle = ev.color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = ev.color;
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillText(ev.name, x + 3, chartArea.top + 11);
+      ctx.restore();
+    });
+  }
+};
+Chart.register(eventLinesPlugin);
 
 function fmt(n) {
   if (n >= 1000000) return (n/1000000).toFixed(2) + 'M';
@@ -865,6 +956,68 @@ async function renderOryx() {
     scales:{ x:{ stacked:true, ticks:{color:C,font:{size:10}}, grid:{color:G} },
              y:{ stacked:true, ticks:{color:C,font:{size:11}}, grid:{display:false} } }
   });
+
+  // ── TÍPUSBONTÁS ────────────────────────────────────────────────
+  if (!data.russia.type_breakdown) return;
+  const tb = data.russia.type_breakdown;
+  const tbUkr = data.ukraine.type_breakdown;
+
+  // 1. Top harckocsi típusok (RUS)
+  const tankTypes = (tb.tanks || []).slice(0, 15);
+  if (tankTypes.length) {
+    document.getElementById('oryx-tank-types-note').textContent =
+      `${tankTypes.length} típus látható — Oryx fotóval igazolt veszteség (${data.meta.last_week})`;
+    sizeCanvas('oryx-tank-types');
+    makeChart('oryx-tank-types', 'bar', {
+      labels: tankTypes.map(t => t.type),
+      datasets: [{ data: tankTypes.map(t => t.total),
+        backgroundColor: tankTypes.map((t,i) => `rgba(${Math.round(192-i*8)},${Math.round(57+i*3)},${Math.round(43+i*2)},0.8)`),
+        borderRadius: 3 }]
+    }, { responsive:false, animation:false, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x} db (Oryx igazolt)`}} },
+      scales:{ x:{ticks:{color:C,font:{size:10}},grid:{color:G}}, y:{ticks:{color:C,font:{size:11}},grid:{display:false}} }
+    });
+  }
+
+  // 2. Modern vs klasszikus (doughnut)
+  const modernTypes = ['T-80BVM','T-90M','T-72B3 Obr. 2016','T-72B3 Obr. 2022','T-80BVM Obr. 2022','T-80BV Obr. 2022','T-72B3 Obr. 2014','T-90A'];
+  const classicTypes = ['T-62','T-62M','T-62MV','T-64','T-64BV','T-72B','T-72A','T-72 \'Ural\'','T-80BV','T-80B','T-80U','T-55'];
+  let modTotal=0, classTotal=0, unknTotal=0;
+  (tb.tanks||[]).forEach(t => {
+    const tn = t.type;
+    if (tn.startsWith('Unknown')) unknTotal += t.total;
+    else if (modernTypes.some(m => tn.startsWith(m))) modTotal += t.total;
+    else if (classicTypes.some(c => tn.startsWith(c))) classTotal += t.total;
+    else classTotal += t.total;
+  });
+  sizeCanvas('oryx-tank-modern');
+  makeChart('oryx-tank-modern', 'doughnut', {
+    labels: ['Modern típusok','Klasszikus típusok','Ismeretlen'],
+    datasets: [{ data: [modTotal, classTotal, unknTotal],
+      backgroundColor: ['#c0392b','#e67e22','#7f8c8d'], borderWidth: 0 }]
+  }, { responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{ display:true, labels:{color:C,font:{size:12},boxWidth:14} },
+      tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed} db (${Math.round(ctx.parsed/(modTotal+classTotal+unknTotal)*100)}%)`}} }
+  });
+
+  // 3. Top repülő típusok RUS vs UKR
+  const rusPlanes = (tb.planes||[]).slice(0,8);
+  const ukrPlanes = (tbUkr?.planes||[]).slice(0,8);
+  const allPlaneTypes = [...new Set([...rusPlanes.map(t=>t.type),...ukrPlanes.map(t=>t.type)])].slice(0,10);
+  const rusMap = Object.fromEntries((tb.planes||[]).map(t=>[t.type,t.total]));
+  const ukrMap = Object.fromEntries((tbUkr?.planes||[]).map(t=>[t.type,t.total]));
+  sizeCanvas('oryx-plane-types');
+  makeChart('oryx-plane-types', 'bar', {
+    labels: allPlaneTypes,
+    datasets: [
+      { label:'Oroszország',data:allPlaneTypes.map(t=>rusMap[t]||0),backgroundColor:'rgba(192,57,43,0.75)',borderRadius:3 },
+      { label:'Ukrajna',data:allPlaneTypes.map(t=>ukrMap[t]||0),backgroundColor:'rgba(52,152,219,0.75)',borderRadius:3 },
+    ]
+  }, { responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{display:true,labels:{color:C,font:{size:11},boxWidth:12}}, tooltip:{mode:'index',intersect:false} },
+    scales:{ x:{ticks:{color:C,font:{size:9},maxRotation:35,autoSkip:false},grid:{color:G}},
+             y:{ticks:{color:C,font:{size:10}},grid:{color:G}} }
+  });
 }
 
 // ============================================================
@@ -1053,7 +1206,7 @@ function renderTrends() {
 function renderHistory() {
   const labels = MONTHLY.map(d => qLabel(d.date));
 
-  // Cumulative personnel
+  // Cumulative personnel with event overlay
   makeChart('hist-personnel-chart', 'line', {
     labels,
     datasets: [{
@@ -1062,9 +1215,10 @@ function renderHistory() {
       borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,0.1)',
       borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3
     }]
-  }, mergeDefaults({
-    scales: { y: { ticks: { callback: v => fmt(v) } } }
-  }));
+  }, {
+    ...mergeDefaults({ scales: { y: { ticks: { callback: v => fmt(v) } } } }),
+    _eventLines: KEY_EVENTS
+  });
 
   // Tanks
   makeChart('hist-tanks-chart', 'line', {
@@ -1318,6 +1472,63 @@ function renderAnalytics() {
   document.querySelector('#contextTable tbody').innerHTML = contexts.map(c =>
     `<tr><td>${c.period}</td><td>${c.note}</td><td>${fmtFull(c.avg)}</td></tr>`
   ).join('');
+
+  // ── RELATÍV MUTATÓK ──────────────────────────────────────────────
+
+  // A) Heti gyorsulás: rolling 7-day avg vs previous 7-day avg
+  const diffs = DAILY.map((d,i) => {
+    const p = i===0 ? MONTHLY[MONTHLY.length-1].personnel : DAILY[i-1].personnel;
+    return Math.max(0, d.personnel - p);
+  });
+  const accelData = [], accelLabels = [];
+  for (let i = 7; i < diffs.length; i++) {
+    const curr7 = diffs.slice(i-6, i+1).reduce((a,b)=>a+b,0)/7;
+    const prev7 = i >= 14 ? diffs.slice(i-13, i-6).reduce((a,b)=>a+b,0)/7 : null;
+    if (prev7 !== null && prev7 > 0) {
+      accelData.push(Math.round((curr7/prev7 - 1)*100));
+      accelLabels.push(dayLabel(DAILY[i].date));
+    }
+  }
+  makeChart('an-weekly-accel', 'bar', {
+    labels: accelLabels,
+    datasets: [{ data: accelData,
+      backgroundColor: accelData.map(v => v >= 0 ? 'rgba(192,57,43,0.7)' : 'rgba(39,174,96,0.7)'),
+      borderRadius: 2 }]
+  }, { ...baseOpts(), plugins: { legend: { display: false },
+    tooltip: { callbacks: { label: ctx => (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y + '%' } } },
+    scales: { x: { ticks: { color: C, font: { size: 10 }, maxRotation: 40, autoSkip: true, maxTicksLimit: 10 }, grid: { color: G } },
+      y: { ticks: { color: C, font: { size: 10 }, callback: v => v + '%' }, grid: { color: G } } }
+  });
+
+  // B) Éves összehasonlítás — személyi, harckocsi, tüzérség napi átlag
+  function yearAvg(field, year) {
+    const pts = MONTHLY.filter(d => new Date(d.date).getFullYear() === year);
+    if (pts.length < 2) return null;
+    return Math.round((pts[pts.length-1][field] - pts[0][field]) /
+      ((new Date(pts[pts.length-1].date) - new Date(pts[0].date)) / 86400000));
+  }
+  function year2026Avg(field) {
+    const ds = DAILY.map((d,i)=>({ v: Math.max(0, d[field]-(i===0?MONTHLY[MONTHLY.length-1][field]:DAILY[i-1][field])) }));
+    return Math.round(ds.reduce((a,b)=>a+b.v,0)/ds.length);
+  }
+  const years = [2022,2023,2024,2025];
+  const pYears = years.map(y=>yearAvg('personnel',y)).concat([year2026Avg('personnel')]);
+  const tYears = years.map(y=>yearAvg('tanks',y)).concat([year2026Avg('tanks')]);
+  const aYears = years.map(y=>yearAvg('artillery',y)).concat([year2026Avg('artillery')]);
+  const yLabels = ['2022','2023','2024','2025','2026 YTD'];
+
+  makeChart('an-period-compare', 'bar', {
+    labels: yLabels,
+    datasets: [
+      { label: 'Személyi (fő/nap)', data: pYears, backgroundColor: 'rgba(192,57,43,0.75)', borderRadius: 3 },
+      { label: 'Harckocsi (db/nap)', data: tYears, backgroundColor: 'rgba(231,76,60,0.75)', borderRadius: 3 },
+      { label: 'Tüzérség (db/nap)', data: aYears, backgroundColor: 'rgba(243,156,18,0.75)', borderRadius: 3 },
+    ]
+  }, { ...baseOpts(), plugins: { legend: { display: true, labels: { color: C, font: { size: 11 }, boxWidth: 12 } },
+    tooltip: { mode: 'index', intersect: false } },
+    scales: { x: { ticks: { color: C, font: { size: 11 } }, grid: { color: G } },
+      y: { ticks: { color: C, font: { size: 10 } }, grid: { color: G } } }
+  });
 }
 
 // ============================================================
@@ -1438,16 +1649,20 @@ function renderHeatmapContent() {
     el.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
   });
 
-  // Top 5 most intense days (personnel)
-  const personnelDeltas = [];
-  for (let i = 0; i < DAILY.length; i++) {
-    const prev = i === 0 ? MONTHLY[MONTHLY.length-1].personnel : DAILY[i-1].personnel;
-    personnelDeltas.push({ date: DAILY[i].date, val: Math.max(0, DAILY[i].personnel - prev) });
-  }
-  const top5 = personnelDeltas.slice().sort((a,b) => b.val - a.val).slice(0,5);
+  // Top 5 legintenzívebb nap — a JELENLEG KIVÁLASZTOTT kategóriában (bugfix: korábban mindig személyi volt)
+  const top5 = deltas.map((v, i) => ({ date: DAILY[i].date, val: v }))
+    .sort((a, b) => b.val - a.val).slice(0, 5);
   const top5el = document.getElementById('hmTop5');
+  const fieldUnit = { personnel: 'fő', uav: 'db', artillery: 'db', afv: 'db' };
   if (top5el) {
-    top5el.innerHTML = top5.map(d => `<li><strong>${d.date}</strong> — +${fmtFull(d.val)} fő</li>`).join('');
+    top5el.innerHTML = top5.map(d =>
+      `<li><strong>${d.date}</strong> — +${fmtFull(d.val)} ${fieldUnit[hmField] || ''}</li>`
+    ).join('');
+    // Top 5 section title frissítése
+    const top5title = top5el.previousElementSibling;
+    if (top5title && top5title.classList.contains('section-title')) {
+      top5title.textContent = `Top 5 legintenzívebb nap — ${fieldLabels[hmField]}`;
+    }
   }
 
   // Bar chart
