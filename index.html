@@ -157,6 +157,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
   <button class="nav-btn" onclick="switchTab('equipment',this)">Felszerelés</button>
   <button class="nav-btn" onclick="switchTab('analytics',this)">Elemzés</button>
   <button class="nav-btn" onclick="switchTab('heatmap',this)">Hőtérkép</button>
+  <button class="nav-btn" onclick="switchTab('oryx',this)">Oryx verifikált</button>
   <button class="nav-btn" onclick="switchTab('method',this)">Módszertan</button>
 </div>
 
@@ -357,6 +358,64 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="section-title">Top 5 legintenzívebb nap (személyi veszteség)</div>
     <ol id="hmTop5" style="padding-left:18px;font-size:13px;line-height:2;color:var(--text);"></ol>
   </div>
+</div>
+</div>
+
+<!-- ===================== ORYX VERIFIED TAB ===================== -->
+<div id="tab-oryx" class="tab-pane">
+<div class="content">
+
+  <div class="summary-block" style="border-left-color:#27ae60;">
+    <p><strong>Oryx vizuálisan igazolt veszteségek</strong> — ez a lap csak azokat a veszteségeket tartalmazza, amelyekhez fotó- vagy videóbizonyíték áll rendelkezésre. A számok <em>alacsonyabbak</em> a valódi veszteségeknél, de módszertanilag megbízhatóbbak az ukrán vezérkari közléseknél. Forrás: <a href="https://www.oryxspioenkop.com" target="_blank">oryxspioenkop.com</a> — heti frissítés.</p>
+  </div>
+
+  <div class="section-title">Orosz vs Ukrán verifikált veszteségek összehasonlítása</div>
+  <div id="oryx-note" style="font-size:12px;color:var(--muted);margin-bottom:14px;">Adatok betöltése...</div>
+
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Főkategóriák — összesített (Oroszország)</div>
+      <div class="chart-note">Vizuálisan igazolt, megsemmisített + zsákmányolt + sérült + elhagyott</div>
+      <canvas id="oryx-rus-bar" style="height:280px;"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Főkategóriák — összesített (Ukrajna)</div>
+      <div class="chart-note">Vizuálisan igazolt Oryx adatok alapján</div>
+      <canvas id="oryx-ukr-bar" style="height:280px;"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Oroszország vs Ukrajna — harckocsi és páncélozott jármű (heti kumulatív)</div>
+    <div class="chart-note">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</div>
+    <canvas id="oryx-tanks-line" style="height:260px;"></canvas>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">MoD bejelentett vs Oryx igazolt — harckocsi összehasonlítás</div>
+    <div class="chart-note">⚠️ Az ukrán vezérkari szám nem verifikált összesítés; az Oryx szám fotóbizonyítékon alapul. A valóság a kettő között van.</div>
+    <canvas id="oryx-gap-bar" style="height:200px;"></canvas>
+  </div>
+
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Heti új orosz veszteség (Oryx) — harckocsi</div>
+      <div class="chart-note">Heti változás az Oryx listán (fotóval igazolt új bejegyzések)</div>
+      <canvas id="oryx-rus-weekly-tanks" style="height:200px;"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Légvédelem és repülő veszteség — összevetés</div>
+      <div class="chart-note">Oroszország vs Ukrajna — Oryx verifikált</div>
+      <canvas id="oryx-air-compare" style="height:200px;"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Zsákmányolt vs megsemmisített arány — Oroszország</div>
+    <div class="chart-note">Az Oryx dokumentál zsákmányolt (captured) eszközöket is — ez egy ritkán látott mutató</div>
+    <canvas id="oryx-captured-bar" style="height:200px;"></canvas>
+  </div>
+
 </div>
 </div>
 
@@ -632,9 +691,180 @@ function renderTab(name) {
     equipment: renderEquipment,
     analytics: renderAnalytics,
     heatmap: renderHeatmap,
+    oryx: renderOryx,
     method: () => {}
   };
   if (fns[name]) fns[name]();
+}
+
+// ============================================================
+//  ORYX VERIFIED TAB
+// ============================================================
+let ORYX = null;
+
+async function loadOryxData() {
+  if (ORYX) return ORYX;
+  try {
+    const r = await fetch('oryx_data.json');
+    ORYX = await r.json();
+    return ORYX;
+  } catch(e) {
+    document.getElementById('oryx-note').textContent =
+      '⚠️ Az Oryx adatfájl (oryx_data.json) nem érhető el. GitHub Pages-en működik, helyi file://-ról nem tölthető be biztonsági korlátozások miatt.';
+    return null;
+  }
+}
+
+async function renderOryx() {
+  const data = await loadOryxData();
+  if (!data) return;
+
+  const meta = data.meta;
+  document.getElementById('oryx-note').innerHTML =
+    `<strong>Forrás:</strong> ${meta.source} &nbsp;|&nbsp; <strong>Adatok:</strong> ${meta.first_week} – ${meta.last_week} &nbsp;|&nbsp; <strong>Hetek száma:</strong> ${meta.total_weeks} &nbsp;|&nbsp; <em>${meta.source_type}</em>`;
+
+  const rus = data.russia;
+  const ukr = data.ukraine;
+  const cats = meta.categories;
+  const catKeys = Object.keys(cats);
+  const catLabels = catKeys.map(k => cats[k]);
+
+  const RUS_COLOR = '#c0392b';
+  const UKR_COLOR = '#3498db';
+  const C = '#6b7080';
+  const G = 'rgba(255,255,255,0.05)';
+
+  // ── Orosz összesítő oszlopdiagram ──────────────────────────
+  const rusTotals = catKeys.map(k => rus.totals[k]?.total || 0);
+  sizeCanvas('oryx-rus-bar');
+  makeChart('oryx-rus-bar', 'bar', {
+    labels: catLabels,
+    datasets: [
+      { label: 'Megsemmisített', data: catKeys.map(k=>rus.totals[k]?.destroyed||0), backgroundColor:'#c0392b', stack:'s' },
+      { label: 'Zsákmányolt',    data: catKeys.map(k=>rus.totals[k]?.captured||0),  backgroundColor:'#e67e22', stack:'s' },
+      { label: 'Sérült',         data: catKeys.map(k=>rus.totals[k]?.damaged||0),   backgroundColor:'#f39c12', stack:'s' },
+      { label: 'Elhagyott',      data: catKeys.map(k=>rus.totals[k]?.abandoned||0), backgroundColor:'#95a5a6', stack:'s' },
+    ]
+  }, {
+    indexAxis:'y', responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{ display:true, labels:{color:C,font:{size:10},boxWidth:10} },
+              tooltip:{mode:'index',intersect:false} },
+    scales:{ x:{ stacked:true, ticks:{color:C,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(1)+'e':v}, grid:{color:G} },
+             y:{ stacked:true, ticks:{color:C,font:{size:11}}, grid:{display:false} } }
+  });
+
+  // ── Ukrán összesítő oszlopdiagram ─────────────────────────
+  sizeCanvas('oryx-ukr-bar');
+  makeChart('oryx-ukr-bar', 'bar', {
+    labels: catLabels,
+    datasets: [
+      { label: 'Megsemmisített', data: catKeys.map(k=>ukr.totals[k]?.destroyed||0), backgroundColor:'#2471a3', stack:'s' },
+      { label: 'Zsákmányolt',    data: catKeys.map(k=>ukr.totals[k]?.captured||0),  backgroundColor:'#5dade2', stack:'s' },
+      { label: 'Sérült',         data: catKeys.map(k=>ukr.totals[k]?.damaged||0),   backgroundColor:'#85c1e9', stack:'s' },
+      { label: 'Elhagyott',      data: catKeys.map(k=>ukr.totals[k]?.abandoned||0), backgroundColor:'#95a5a6', stack:'s' },
+    ]
+  }, {
+    indexAxis:'y', responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{ display:true, labels:{color:C,font:{size:10},boxWidth:10} },
+              tooltip:{mode:'index',intersect:false} },
+    scales:{ x:{ stacked:true, ticks:{color:C,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(1)+'e':v}, grid:{color:G} },
+             y:{ stacked:true, ticks:{color:C,font:{size:11}}, grid:{display:false} } }
+  });
+
+  // ── Harckocsi kumulatív idősor ─────────────────────────────
+  const wkLabels = rus.weekly_cumulative.map(w => w.date.slice(0,7));
+  sizeCanvas('oryx-tanks-line');
+  makeChart('oryx-tanks-line', 'line', {
+    labels: wkLabels,
+    datasets: [
+      { label:'Oroszország — harckocsi', data: rus.weekly_cumulative.map(w=>w.tanks), borderColor:RUS_COLOR, backgroundColor:'rgba(192,57,43,0.08)', fill:true, tension:0.3, pointRadius:2, borderWidth:2 },
+      { label:'Ukrajna — harckocsi',     data: ukr.weekly_cumulative.map(w=>w.tanks), borderColor:UKR_COLOR, backgroundColor:'rgba(52,152,219,0.08)', fill:true, tension:0.3, pointRadius:2, borderWidth:2 },
+      { label:'Oroszország — páncélozott', data: rus.weekly_cumulative.map(w=>w.afv), borderColor:'#e67e22', fill:false, tension:0.3, pointRadius:0, borderWidth:2, borderDash:[4,3] },
+      { label:'Ukrajna — páncélozott',     data: ukr.weekly_cumulative.map(w=>w.afv), borderColor:'#5dade2', fill:false, tension:0.3, pointRadius:0, borderWidth:2, borderDash:[4,3] },
+    ]
+  }, {
+    responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{ display:true, labels:{color:C,font:{size:11},boxWidth:12} }, tooltip:{mode:'index',intersect:false} },
+    scales:{ x:{ticks:{color:C,font:{size:10},autoSkip:true,maxTicksLimit:14},grid:{color:G}},
+             y:{ticks:{color:C,font:{size:10}},grid:{color:G}} }
+  });
+
+  // ── MoD vs Oryx összehasonlítás ───────────────────────────
+  const lastMoD = DAILY[DAILY.length-1];
+  const gapData = [
+    { label:'Harckocsi',    mod: lastMoD.tanks,      oryx: rus.totals.tanks?.total||0 },
+    { label:'Páncélozott',  mod: lastMoD.afv,        oryx: rus.totals.afv?.total||0 },
+    { label:'Tüzérség',     mod: lastMoD.artillery,  oryx: (rus.totals.artillery?.total||0)+(rus.totals.mlrs?.total||0) },
+    { label:'Repülő',       mod: lastMoD.planes,     oryx: rus.totals.planes?.total||0 },
+    { label:'Helikopter',   mod: lastMoD.helicopters,oryx: rus.totals.helicopters?.total||0 },
+    { label:'Légvédelem',   mod: lastMoD.airdef,     oryx: rus.totals.airdef?.total||0 },
+  ];
+  sizeCanvas('oryx-gap-bar');
+  makeChart('oryx-gap-bar', 'bar', {
+    labels: gapData.map(g=>g.label),
+    datasets: [
+      { label:'Ukrán MoD (bejelentett)', data: gapData.map(g=>g.mod), backgroundColor:'rgba(192,57,43,0.7)' },
+      { label:'Oryx (fotóval igazolt)',  data: gapData.map(g=>g.oryx), backgroundColor:'rgba(39,174,96,0.8)' },
+    ]
+  }, {
+    responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{ display:true, labels:{color:C,font:{size:11},boxWidth:12} }, tooltip:{mode:'index',intersect:false,
+      callbacks:{ afterBody: (items) => {
+        const m=items[0]?.parsed.y||1; const o=items[1]?.parsed.y||1;
+        return [`Arány: ${(m/o).toFixed(1)}x (MoD / Oryx)`];
+      }}} },
+    scales:{ x:{ticks:{color:C,font:{size:11}},grid:{color:G}},
+             y:{ticks:{color:C,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'e':v},grid:{color:G}} }
+  });
+
+  // ── Heti orosz tankveszteség (Oryx delta) ─────────────────
+  const wkDelta = rus.weekly_delta;
+  sizeCanvas('oryx-rus-weekly-tanks');
+  makeChart('oryx-rus-weekly-tanks', 'bar', {
+    labels: wkDelta.map(w=>w.date.slice(5)),
+    datasets: [{ data: wkDelta.map(w=>w.tanks), backgroundColor:'#c0392b', borderRadius:2 }]
+  }, {
+    responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>'+'+fmt(ctx.parsed.y)+' db'}} },
+    scales:{ x:{ticks:{color:C,font:{size:9},autoSkip:true,maxTicksLimit:14},grid:{color:G}},
+             y:{ticks:{color:C,font:{size:10}},grid:{color:G}} }
+  });
+
+  // ── Légvédelem + repülő összehasonlítás ───────────────────
+  sizeCanvas('oryx-air-compare');
+  makeChart('oryx-air-compare', 'bar', {
+    labels: ['Repülő\n(Orosz)', 'Repülő\n(Ukrán)', 'Helikopter\n(Orosz)', 'Helikopter\n(Ukrán)', 'Légvédelem\n(Orosz)', 'Légvédelem\n(Ukrán)'],
+    datasets: [{
+      data: [
+        rus.totals.planes?.total||0, ukr.totals.planes?.total||0,
+        rus.totals.helicopters?.total||0, ukr.totals.helicopters?.total||0,
+        rus.totals.airdef?.total||0, ukr.totals.airdef?.total||0,
+      ],
+      backgroundColor: [RUS_COLOR,UKR_COLOR,RUS_COLOR,UKR_COLOR,'#e67e22','#5dade2'],
+      borderRadius:3
+    }]
+  }, {
+    responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>fmt(ctx.parsed.y)+' db'}} },
+    scales:{ x:{ticks:{color:C,font:{size:10}},grid:{color:G}},
+             y:{ticks:{color:C,font:{size:10}},grid:{color:G}} }
+  });
+
+  // ── Zsákmányolt vs megsemmisített ─────────────────────────
+  const capCats = catKeys.filter(k=>rus.totals[k]?.captured>0);
+  sizeCanvas('oryx-captured-bar');
+  makeChart('oryx-captured-bar', 'bar', {
+    labels: capCats.map(k=>cats[k]),
+    datasets: [
+      { label:'Megsemmisített', data:capCats.map(k=>rus.totals[k]?.destroyed||0), backgroundColor:'#c0392b', stack:'s' },
+      { label:'Zsákmányolt',    data:capCats.map(k=>rus.totals[k]?.captured||0),  backgroundColor:'#27ae60', stack:'s' },
+    ]
+  }, {
+    indexAxis:'y', responsive:false, animation:false, maintainAspectRatio:false,
+    plugins:{ legend:{ display:true, labels:{color:C,font:{size:11},boxWidth:10} }, tooltip:{mode:'index',intersect:false} },
+    scales:{ x:{ stacked:true, ticks:{color:C,font:{size:10}}, grid:{color:G} },
+             y:{ stacked:true, ticks:{color:C,font:{size:11}}, grid:{display:false} } }
+  });
 }
 
 // ============================================================
