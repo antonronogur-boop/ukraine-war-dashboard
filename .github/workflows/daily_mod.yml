@@ -1,0 +1,43 @@
+name: Napi MoD veszteségadat frissítés
+
+on:
+  # Minden nap 07:00 UTC = 09:00 Budapest (nyári idő)
+  schedule:
+    - cron: '0 7 * * *'
+
+  # Manuálisan is futtatható
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-mod-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Repo checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Python 3.11 telepítése
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Függőségek telepítése
+        run: pip install requests beautifulsoup4
+
+      - name: MoD adat scraping és index.html frissítése
+        run: python scripts/mod_scraper.py index.html
+
+      - name: Változások commitolása (ha van)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'Auto-update: napi MoD veszteségadat'
+          file_pattern: 'index.html'
+          commit_user_name: 'github-actions[bot]'
+          commit_user_email: 'github-actions[bot]@users.noreply.github.com'
+          skip_dirty_check: false
