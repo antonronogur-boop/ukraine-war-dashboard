@@ -121,6 +121,11 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 /* TOOLTIP */
 #tooltip{position:fixed;background:rgba(20,24,36,.95);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:8px 12px;font-size:12px;pointer-events:none;z-index:999;display:none;line-height:1.5;}
 
+/* INTENSITY TOOLTIP */
+.intensity-tooltip{position:relative;display:inline-block;cursor:help;margin-left:5px;color:rgba(52,152,219,0.7);font-size:11px;}
+.intensity-tooltip .tt-text{display:none;position:absolute;left:0;top:20px;background:rgba(15,17,23,0.97);border:1px solid rgba(52,152,219,0.3);border-radius:6px;padding:8px 12px;font-size:11px;color:#9bb3cc;line-height:1.5;width:240px;z-index:500;}
+.intensity-tooltip:hover .tt-text{display:block;}
+
 /* RESPONSIVE */
 @media(max-width:600px){
   .topbar{padding:10px 14px;}
@@ -128,6 +133,21 @@ tr:hover td{background:rgba(255,255,255,0.02);}
   .nav{top:80px;}
   .disclaimer-bar{top:52px;}
   .metrics-grid{grid-template-columns:1fr 1fr;}
+}
+
+/* Responsive: prevent chart overflow */
+.chart-wrap canvas { max-width: 100%; }
+.grid2, .grid3 { min-width: 0; }
+.grid2 > *, .grid3 > * { min-width: 0; overflow: hidden; }
+
+/* Ensure heatmap doesn't overflow */
+#hmContainer { overflow-x: auto; }
+
+/* Mobile: stack two-column grids */
+@media(max-width:700px) {
+  .grid2, .grid3 { grid-template-columns: 1fr !important; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .intensity-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -173,8 +193,35 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <p><strong>Rövid értékelés:</strong> A legfrissebb adatok alapján az ukrán vezérkari közlések magas napi orosz személyi veszteségi ütemet jeleznek (2026 május átlaga: ~1 000+ fő/nap). Az UAV-veszteségek meredeken gyorsuló ütemben növekednek. Az adatok trendjelzésre alkalmasabbak, mint pontos veszteségbecslésre.</p>
   </div>
 
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Fő megállapítások</div>
+    <div id="keyFindings" style="font-size:13px;line-height:1.8;color:#b0b8d0;"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;" class="two-worlds-grid">
+    <div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.25);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:12px;font-weight:700;color:#e74c3c;margin-bottom:8px;">🇺🇦 Ukrán vezérkari közlések (MoD)</div>
+      <ul style="font-size:12px;color:#b0b8d0;line-height:1.8;padding-left:16px;">
+        <li>Napi frissítés</li>
+        <li>Teljesebbnek szánt összesítés</li>
+        <li>Nem függetlenül verifikált</li>
+        <li>Trendfigyelésre alkalmas</li>
+      </ul>
+    </div>
+    <div style="background:rgba(39,174,96,0.08);border:1px solid rgba(39,174,96,0.25);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:12px;font-weight:700;color:#27ae60;margin-bottom:8px;">🔍 Oryx vizuális dokumentáció</div>
+      <ul style="font-size:12px;color:#b0b8d0;line-height:1.8;padding-left:16px;">
+        <li>Fotó/videóval igazolt</li>
+        <li>Alacsonyabb számokat mutat</li>
+        <li>Dokumentáltsági torzítást tartalmaz</li>
+        <li>Verifikációs kontrollként hasznos</li>
+      </ul>
+    </div>
+  </div>
+  <style>@media(max-width:600px){.two-worlds-grid{grid-template-columns:1fr!important;}}</style>
+
   <!-- WAR INTENSITY -->
-  <div class="section-title">Háborús intenzitásmutatók</div>
+  <div class="section-title">Veszteségdinamikai mutatók</div>
   <div class="intensity-grid" id="intensityGrid"></div>
   <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-bottom:16px;line-height:1.5;">Az indikátorok 0–100-as relatív skálán mutatják az adott mutató jelenlegi értékét a 2022–2026 közötti saját idősor minimumához és maximumához képest. A 100-as érték az eddigi legmagasabb 30 napos átlagot jelenti.</p>
 
@@ -231,10 +278,17 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <canvas id="tr-uav-chart" height="180"></canvas>
     <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
   </div>
-  <div class="chart-wrap">
-    <div class="chart-title">Tüzérség + IFV napi veszteség (halmozott)</div>
-    <canvas id="tr-stack-chart" height="180"></canvas>
-    <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Napi tüzérségi veszteség</div>
+      <canvas id="tr-arty-chart" height="160"></canvas>
+      <div class="so-what">A tüzérségi veszteségek önálló trendvonala megmutatja az ellenütegelési harc intenzitásának változását.</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Napi páncélozott harcjármű-veszteség (AFV)</div>
+      <canvas id="tr-afv-chart" height="160"></canvas>
+      <div class="so-what">Az IFV/APV veszteségek a páncélos hadviselés intenzitását mutatják — önállóan értelmezve informatívabb, mint a tüzérséggel halmozva.</div>
+    </div>
   </div>
 </div>
 </div>
@@ -283,16 +337,31 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="chart-title">Összes felszerelési kategória — kumulált veszteség (legutóbbi adat)</div>
     <canvas id="eq-bar-chart" height="280"></canvas>
   </div>
+  <div class="section-title" style="margin-top:20px;">Nehéz harci eszközök — idősor</div>
   <div class="grid2">
     <div class="chart-wrap">
-      <div class="chart-title">Légierő veszteségek idősorban (negyedéves)</div>
-      <canvas id="eq-air-chart" height="200"></canvas>
-      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
+      <div class="chart-title">Harckocsi, páncélozott, MLRS (negyedéves)</div>
+      <div class="chart-note">💡 Kattints a jelmagyarázat elemére</div>
+      <canvas id="eq-heavy-chart" height="200"></canvas>
     </div>
     <div class="chart-wrap">
-      <div class="chart-title">Tüzérség & MLRS idősor (negyedéves)</div>
+      <div class="chart-title">Tüzérség és légvédelem (negyedéves)</div>
+      <div class="chart-note">💡 Kattints a jelmagyarázat elemére</div>
       <canvas id="eq-arty-chart" height="200"></canvas>
-      <p style="font-size:11px;color:var(--muted,#8b8fa8);margin-top:4px;">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</p>
+    </div>
+  </div>
+  <div class="section-title" style="margin-top:8px;">Stratégiai / alacsony volumenű kategóriák</div>
+  <div class="grid2">
+    <div class="chart-wrap">
+      <div class="chart-title">Légi veszteségek — repülő és helikopter</div>
+      <div class="chart-note">Epizodikus kategória — kis darabszámok, óvatos értelmezéssel</div>
+      <canvas id="eq-air-chart" height="200"></canvas>
+      <div class="so-what">A repülőgép és helikopter veszteségek alacsony volumenű, epizodikus kategóriák. Egy-két kiugró hét nem feltétlenül jelöl trendet — a kumulatív görbe informatívabb.</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Tüzérség & MLRS idősor</div>
+      <div class="chart-note">💡 Kattints a jelmagyarázat elemére</div>
+      <canvas id="eq-arty2-chart" height="200"></canvas>
     </div>
   </div>
 </div>
@@ -421,8 +490,11 @@ tr:hover td{background:rgba(255,255,255,0.02);}
   </div>
 
   <div class="chart-wrap">
-    <div class="chart-title">MoD bejelentett vs Oryx igazolt — főkategóriák összehasonlítása</div>
-    <div class="chart-note">⚠️ Az ukrán vezérkari szám nem verifikált összesítés; az Oryx szám fotóbizonyítékon alapul. A valóság a kettő között van.</div>
+    <div class="chart-title">Bejelentett ukrán vezérkari számok vs vizuálisan igazolt Oryx-adatok — főkategóriák</div>
+    <div style="background:rgba(241,196,15,0.1);border:1px solid rgba(241,196,15,0.3);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#c8a84b;line-height:1.6;">
+      ⚠️ <strong>Módszertani figyelmeztetés:</strong> A két forrás nem ugyanazt méri.<br>
+      Az ukrán vezérkari szám <em>napi jelentett összesítés</em>, az Oryx csak <em>fotó/videóval dokumentált</em> veszteséget tartalmaz. Az Oryx ezért <strong>alsó becslésként</strong> kezelendő — nem azt jelenti, hogy ez a valóság, hanem hogy legalább ennyi bizonyítható.
+    </div>
     <canvas id="oryx-gap-bar" style="height:200px;"></canvas>
     <div class="so-what">A bejelentett és vizuálisan igazolt veszteségek között <strong>jellemzően 2–3-szoros különbség</strong> mutatkozik. Ez nem feltétlenül tudatos túlzást jelent — a harctéri azonosítás és dokumentálás módszertani korlátaiból is fakadhat. <strong>Mindkét szám alulbecslés</strong>: az Oryx csak azt rögzíti, amihez kép létezik és nyilvánosan elérhető.</div>
   </div>
@@ -518,6 +590,26 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <h3>CSV export felépítése</h3>
       <p>Oszlopok: <code>date, war_day, personnel_total, personnel_daily, tanks_total, tanks_daily, artillery_total, artillery_daily, uav_total, uav_daily, source_url</code></p>
     </div>
+    <div class="meth-section">
+      <h3>Mire jó ez az oldal?</h3>
+      <ul>
+        <li>Jelentett attríciós trendek követésére</li>
+        <li>Veszteségi ütemek időbeli összehasonlítására</li>
+        <li>Kategóriák közötti arányeltolódások felismerésére</li>
+        <li>Ukrán közlések és vizuálisan igazolt veszteségek különbségének bemutatására</li>
+        <li>OSINT elemzői munka kiegészítéseként</li>
+      </ul>
+    </div>
+    <div class="meth-section">
+      <h3>Mire nem jó?</h3>
+      <ul>
+        <li>Pontos tényleges veszteségek meghatározására</li>
+        <li>Harctéri eredményesség önmagában történő megítélésére</li>
+        <li>Teljes katonai erőviszonyok becslésére</li>
+        <li>Független veszteség-verifikáció kiváltására</li>
+        <li>Előrejelzés alapjaként (a kivetítés mechanikus, nem modell-alapú)</li>
+      </ul>
+    </div>
   </div>
 </div>
 </div>
@@ -543,8 +635,7 @@ const MONTHLY = [
   {date:"2025-06-30",personnel:1020010,tanks:10980,afv:22922,artillery:29718,mlrs:1427,airdef:1190,planes:420,helicopters:340,uav:42796,missiles:3436,ships:28,submarines:1,vehicles:53593,special:3921,robots:0},
   {date:"2025-09-30",personnel:1110560,tanks:11222,afv:23291,artillery:33311,mlrs:1505,airdef:1222,planes:427,helicopters:346,uav:65303,missiles:3790,ships:28,submarines:1,vehicles:63241,special:3970,robots:0},
   {date:"2025-12-31",personnel:1207910,tanks:11481,afv:23845,artillery:35642,mlrs:1586,airdef:1266,planes:434,helicopters:347,uav:97684,missiles:4136,ships:28,submarines:2,vehicles:72247,special:4035,robots:0},
-  {date:"2026-04-30",personnel:1330290,tanks:11901,afv:24493,artillery:40944,mlrs:1756,airdef:1356,planes:435,helicopters:352,uav:263360,missiles:4579,ships:33,submarines:2,vehicles:92606,special:4148,robots:0},
-  {date:"2026-06-05",personnel:1370890,tanks:11980,afv:24684,artillery:43315,mlrs:0,airdef:1404,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:103300,special:4250,robots:1576}
+  {date:"2026-04-30",personnel:1330290,tanks:11901,afv:24493,artillery:40944,mlrs:1756,airdef:1356,planes:435,helicopters:352,uav:263360,missiles:4579,ships:33,submarines:2,vehicles:92606,special:4148,robots:0}
 ];
 
 const DAILY = [
@@ -645,6 +736,31 @@ const eventLinesPlugin = {
   }
 };
 Chart.register(eventLinesPlugin);
+
+const periodShadingPlugin = {
+  id: 'periodShading',
+  beforeDraw(chart) {
+    if (!chart.config.options._periods) return;
+    const { ctx, chartArea, scales } = chart;
+    if (!scales.x || !chartArea) return;
+    chart.config.options._periods.forEach(p => {
+      const x1 = scales.x.getPixelForTick(chart.data.labels.indexOf(p.from));
+      const x2 = scales.x.getPixelForTick(chart.data.labels.indexOf(p.to));
+      if (x1 < 0 || x2 < 0) return;
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.fillRect(Math.min(x1, x2), chartArea.top, Math.abs(x2 - x1), chartArea.height);
+      ctx.restore();
+    });
+  }
+};
+Chart.register(periodShadingPlugin);
+
+const KEY_PERIODS = [
+  { from: '2024 Q4', to: '2025 Q1', color: 'rgba(231,76,60,0.08)', label: 'Fokozott orosz nyomás' },
+  { from: '2023 Q2', to: '2023 Q3', color: 'rgba(52,152,219,0.08)', label: 'Ukrán ellentámadás' },
+  { from: '2024 Q3', to: '2024 Q3', color: 'rgba(241,196,15,0.1)', label: 'Kursk hadművelet' },
+];
 
 function fmt(n) {
   if (n >= 1000000) return (n/1000000).toFixed(2) + 'M';
@@ -1051,11 +1167,11 @@ function renderOverview() {
   function intensityScore(val, ref) { return Math.min(100, Math.round((val/ref)*50 + 25)); }
 
   const indicators = [
-    { label: 'Személyi veszteségi intenzitás', score: intensityScore(avg7p, avg30p), detail: `7n átlag: ${Math.round(avg7p)} | havi átlag: ${Math.round(avg30p)}` },
-    { label: 'UAV-veszteségi gyorsulás', score: intensityScore(avg7u, avg30u), detail: `7n átlag: ${Math.round(avg7u)} | havi átlag: ${Math.round(avg30u)}` },
-    { label: 'Tüzérségi nyomásindikátor', score: intensityScore(avg7a, avg30a), detail: `7n átlag: ${Math.round(avg7a)} | havi átlag: ${Math.round(avg30a)}` },
-    { label: 'Nehézeszköz-veszteségi mutató', score: intensityScore(avg7t+avg7afv, avg30t+avg30afv), detail: `7n hk+ifv átlag: ${(avg7t+avg7afv).toFixed(1)}` },
-    { label: 'Légi aktivitás (repülő+helikopter)', score: 22, detail: 'Alacsony változás máj. folyamán' }
+    { label: 'Személyi veszteségi intenzitás', score: intensityScore(avg7p, avg30p), detail: `7n átlag: ${Math.round(avg7p)} | havi átlag: ${Math.round(avg30p)}`, tooltip: 'Az elmúlt 7 nap átlagos napi személyi vesztesége a teljes idősoros minimumához és maximumához viszonyítva. Magas érték tartós frontális nyomásra vagy jelentési ütemfokozódásra utalhat.' },
+    { label: 'UAV-veszteségi gyorsulás', score: intensityScore(avg7u, avg30u), detail: `7n átlag: ${Math.round(avg7u)} | havi átlag: ${Math.round(avg30u)}`, tooltip: 'Az elmúlt 7 nap átlagos napi drónvesztesége relatív skálán. Emelkedése nemcsak több lelőtt UAV-t, hanem nagyobb orosz UAV-bevetést is jelezhet.' },
+    { label: 'Tüzérségi nyomásindikátor', score: intensityScore(avg7a, avg30a), detail: `7n átlag: ${Math.round(avg7a)} | havi átlag: ${Math.round(avg30a)}`, tooltip: 'Az elmúlt 7 nap tüzérségi veszteségeinek szintje. Magasabb érték intenzívebb ellenütegelési és csapásmérési ciklusokra utalhat.' },
+    { label: 'Nehézeszköz-veszteségi mutató', score: intensityScore(avg7t+avg7afv, avg30t+avg30afv), detail: `7n hk+ifv átlag: ${(avg7t+avg7afv).toFixed(1)}`, tooltip: 'Harckocsi és páncélozott jármű veszteségek kombinált szintje. A magas érték nem feltétlenül áttörést, inkább eszközök nagyobb bevonását jelzi.' },
+    { label: 'Légi aktivitás-jelző', score: 22, detail: 'Alacsony változás máj. folyamán', tooltip: 'Repülő és helikopter veszteségek szintje. Alacsony volumenű, epizodikus kategória — rövid tüskék nem feltétlenül tartós trendet jelölnek.' }
   ];
 
   function scoreColor(s) {
@@ -1068,11 +1184,20 @@ function renderOverview() {
   const ig = document.getElementById('intensityGrid');
   ig.innerHTML = indicators.map(ind => `
     <div class="intensity-item">
-      <div class="intensity-label">${ind.label}</div>
+      <div class="intensity-label">${ind.label}<span class="intensity-tooltip">ℹ️<span class="tt-text">${ind.tooltip}</span></span></div>
       <div class="intensity-bar-wrap"><div class="intensity-bar" style="width:${ind.score}%;background:${scoreColor(ind.score)};"></div></div>
       <div class="intensity-meta"><span>${ind.detail}</span><span>${ind.score}/100</span></div>
     </div>
   `).join('');
+
+  // === KEY FINDINGS ===
+  const trend7vs30 = avg7p > avg30p ? 'emelkedett' : 'csökkent';
+  const uavTrend = avg7u > avg30u * 1.05 ? 'emelkedő tendenciát mutat' : 'stabil szinten van';
+  document.getElementById('keyFindings').innerHTML = `
+    <div style="margin-bottom:6px;">📌 <strong>1.</strong> A jelentett személyi veszteségi ütem az elmúlt 7 napban ${trend7vs30} a havi átlaghoz képest (7 napos átlag: ~${Math.round(avg7p)} fő/nap).</div>
+    <div style="margin-bottom:6px;">📌 <strong>2.</strong> Az UAV-veszteségek ${uavTrend} — ez részben az orosz drónalkalmazás növekvő volumenét tükrözheti, nem feltétlenül hatékonyabb ukrán légvédelmet.</div>
+    <div>📌 <strong>3.</strong> A tüzérségi és páncélozott veszteségek együtt értelmezve mutatják jobban a harctéri nyomást. Önmagukban mindkét kategória félrevezető lehet.</div>
+  `;
 
   // === METRIC CARDS ===
   const metrics = [
@@ -1192,13 +1317,17 @@ function renderTrends() {
     ]
   }, mergeDefaults({ plugins: { legend: { display: true } } }));
 
-  makeChart('tr-stack-chart', 'bar', {
+  // Artillery
+  makeChart('tr-arty-chart', 'bar', {
     labels,
-    datasets: [
-      { label: 'Tüzérség', data: aD, backgroundColor: 'rgba(243,156,18,0.7)', stack: 'a' },
-      { label: 'IFV/AFV', data: afD, backgroundColor: 'rgba(230,126,34,0.7)', stack: 'a' }
-    ]
-  }, mergeDefaults({ plugins: { legend: { display: true } }, scales: { x: { stacked: true }, y: { stacked: true } } }));
+    datasets: [{ data: aD, backgroundColor: 'rgba(243,156,18,0.75)', borderRadius: 2 }]
+  }, { ...baseOpts(), plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '+' + fmt(ctx.parsed.y) + ' db' } } } });
+
+  // AFV
+  makeChart('tr-afv-chart', 'bar', {
+    labels,
+    datasets: [{ data: afD, backgroundColor: 'rgba(230,126,34,0.75)', borderRadius: 2 }]
+  }, { ...baseOpts(), plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '+' + fmt(ctx.parsed.y) + ' db' } } } });
 }
 
 // ============================================================
@@ -1218,7 +1347,8 @@ function renderHistory() {
     }]
   }, {
     ...mergeDefaults({ scales: { y: { ticks: { callback: v => fmt(v) } } } }),
-    _eventLines: KEY_EVENTS
+    _eventLines: KEY_EVENTS,
+    _periods: KEY_PERIODS
   });
 
   // Tanks
@@ -1318,8 +1448,18 @@ function renderEquipment() {
     }
   });
 
-  // Air losses quarterly
+  // Heavy ground equipment quarterly
   const qlabels = MONTHLY.map(d => qLabel(d.date));
+  makeChart('eq-heavy-chart', 'line', {
+    labels: qlabels,
+    datasets: [
+      { label: 'Harckocsi', data: MONTHLY.map(d=>d.tanks), borderColor:'#e74c3c', backgroundColor:'rgba(231,76,60,0.08)', fill:false, tension:0.3, pointRadius:3, borderWidth:2 },
+      { label: 'Páncélozott', data: MONTHLY.map(d=>d.afv), borderColor:'#e67e22', backgroundColor:'rgba(230,126,34,0.08)', fill:false, tension:0.3, pointRadius:3, borderWidth:2 },
+      { label: 'MLRS', data: MONTHLY.map(d=>d.mlrs), borderColor:'#f39c12', backgroundColor:'rgba(243,156,18,0.08)', fill:false, tension:0.3, pointRadius:3, borderWidth:2, borderDash:[4,3] },
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } }, scales: { y: { ticks: { callback: v => fmt(v) } } } }));
+
+  // Air losses quarterly
   makeChart('eq-air-chart', 'line', {
     labels: qlabels,
     datasets: [
@@ -1328,8 +1468,17 @@ function renderEquipment() {
     ]
   }, mergeDefaults({ plugins: { legend: { display: true } } }));
 
-  // Artillery & MLRS quarterly
+  // Artillery & MLRS quarterly (main)
   makeChart('eq-arty-chart', 'line', {
+    labels: qlabels,
+    datasets: [
+      { label: 'Tüzérség', data: MONTHLY.map(d=>d.artillery), borderColor:'#f39c12', backgroundColor:'rgba(243,156,18,0.1)', borderWidth:2, pointRadius:3, fill:true, tension:0.3 },
+      { label: 'Légvédelem', data: MONTHLY.map(d=>d.airdef), borderColor:'#2980b9', backgroundColor:'rgba(41,128,185,0.1)', borderWidth:2, pointRadius:3, fill:true, tension:0.3 }
+    ]
+  }, mergeDefaults({ plugins: { legend: { display: true } }, scales: { y: { ticks: { callback: v => fmt(v) } } } }));
+
+  // Artillery & MLRS quarterly (duplicate for second grid slot)
+  makeChart('eq-arty2-chart', 'line', {
     labels: qlabels,
     datasets: [
       { label: 'Tüzérség', data: MONTHLY.map(d=>d.artillery), borderColor:'#f39c12', backgroundColor:'rgba(243,156,18,0.1)', borderWidth:2, pointRadius:3, fill:true, tension:0.3 },
@@ -1719,6 +1868,258 @@ function exportCSV() {
 //  INITIAL RENDER
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+  renderOverview();
+});
+
+// Ablak átméretezésekor újrarajzolás (responsive:false esetén manuálisan kell)
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    Object.keys(chartInstances).forEach(id => {
+      sizeCanvas(id);
+      chartInstances[id].resize();
+    });
+  }, 150);
+});
+</script>
+</body>
+</html>
+    datasets: [{ data: accelData,
+      backgroundColor: accelData.map(v => v >= 0 ? 'rgba(192,57,43,0.7)' : 'rgba(39,174,96,0.7)'),
+      borderRadius: 2 }]
+  }, { ...baseOpts(), plugins: { legend: { display: false },
+    tooltip: { callbacks: { label: ctx => (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y + '%' } } },
+    scales: { x: { ticks: { color: C, font: { size: 10 }, maxRotation: 40, autoSkip: true, maxTicksLimit: 10 }, grid: { color: G } },
+      y: { ticks: { color: C, font: { size: 10 }, callback: v => v + '%' }, grid: { color: G } } }
+  });
+
+  // B) Éves összehasonlítás — személyi, harckocsi, tüzérség napi átlag
+  function yearAvg(field, year) {
+    const pts = MONTHLY.filter(d => new Date(d.date).getFullYear() === year);
+    if (pts.length < 2) return null;
+    return Math.round((pts[pts.length-1][field] - pts[0][field]) /
+      ((new Date(pts[pts.length-1].date) - new Date(pts[0].date)) / 86400000));
+  }
+  function year2026Avg(field) {
+    const ds = DAILY.map((d,i)=>({ v: Math.max(0, d[field]-(i===0?MONTHLY[MONTHLY.length-1][field]:DAILY[i-1][field])) }));
+    return Math.round(ds.reduce((a,b)=>a+b.v,0)/ds.length);
+  }
+  const years = [2022,2023,2024,2025];
+  const pYears = years.map(y=>yearAvg('personnel',y)).concat([year2026Avg('personnel')]);
+  const tYears = years.map(y=>yearAvg('tanks',y)).concat([year2026Avg('tanks')]);
+  const aYears = years.map(y=>yearAvg('artillery',y)).concat([year2026Avg('artillery')]);
+  const yLabels = ['2022','2023','2024','2025','2026 YTD'];
+
+  makeChart('an-period-compare', 'bar', {
+    labels: yLabels,
+    datasets: [
+      { label: 'Személyi (fő/nap)', data: pYears, backgroundColor: 'rgba(192,57,43,0.75)', borderRadius: 3 },
+      { label: 'Harckocsi (db/nap)', data: tYears, backgroundColor: 'rgba(231,76,60,0.75)', borderRadius: 3 },
+      { label: 'Tüzérség (db/nap)', data: aYears, backgroundColor: 'rgba(243,156,18,0.75)', borderRadius: 3 },
+    ]
+  }, { ...baseOpts(), plugins: { legend: { display: true, labels: { color: C, font: { size: 11 }, boxWidth: 12 } },
+    tooltip: { mode: 'index', intersect: false } },
+    scales: { x: { ticks: { color: C, font: { size: 11 } }, grid: { color: G } },
+      y: { ticks: { color: C, font: { size: 10 } }, grid: { color: G } } }
+  });
+}
+
+// ============================================================
+//  HEATMAP
+// ============================================================
+let hmField = 'personnel';
+let hmBarChart = null;
+
+function setHmField(field, btn) {
+  hmField = field;
+  document.querySelectorAll('#hmFilter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHeatmapContent();
+}
+
+function renderHeatmap() {
+  renderHeatmapContent();
+}
+
+function renderHeatmapContent() {
+  const fieldLabels = {
+    personnel: 'Személyi veszteség',
+    uav: 'UAV drón',
+    artillery: 'Tüzérség',
+    afv: 'Páncélozott (AFV)'
+  };
+  document.getElementById('hmTitle').textContent = fieldLabels[hmField] + ' — napi hőtérkép (2026 május)';
+  document.getElementById('hmBarTitle').textContent = 'Napi ' + fieldLabels[hmField].toLowerCase() + ' (máj. 2026)';
+
+  // compute deltas
+  function getDeltas(field) {
+    const res = [];
+    for (let i = 0; i < DAILY.length; i++) {
+      const prev = i === 0 ? MONTHLY[MONTHLY.length-1][field] : DAILY[i-1][field];
+      let delta = Math.max(0, DAILY[i][field] - prev);
+      if (field === 'robots' && prev === 0 && delta > 100) delta = 0;
+      res.push(delta);
+    }
+    return res;
+  }
+
+  const deltas = getDeltas(hmField);
+  const avg = deltas.reduce((a,b)=>a+b,0)/deltas.length;
+  const mn = Math.min(...deltas);
+  const mx = Math.max(...deltas);
+
+  function hmColor(v) {
+    const t = (mx - mn) < 1 ? 0.5 : (v - mn) / (mx - mn);
+    if (t < 0.33) {
+      const tt = t/0.33;
+      return `rgba(${Math.round(30+40*tt)},${Math.round(100+56*tt)},${Math.round(180-60*tt)},0.9)`;
+    } else if (t < 0.66) {
+      const tt = (t-0.33)/0.33;
+      return `rgba(${Math.round(70+130*tt)},${Math.round(156+43*tt)},${Math.round(120-100*tt)},0.9)`;
+    } else {
+      const tt = (t-0.66)/0.34;
+      return `rgba(${Math.round(200+55*tt)},${Math.round(199-160*tt)},${Math.round(20)},0.9)`;
+    }
+  }
+
+  const tooltip = document.getElementById('tooltip');
+  const container = document.getElementById('hmContainer');
+
+  const cells = DAILY.map((d, i) => {
+    const v = deltas[i];
+    const dev = avg > 0 ? ((v - avg)/avg*100).toFixed(1) : 0;
+    const sign = dev > 0 ? '+' : '';
+    return { date: d.date, v, dev, sign, color: hmColor(v), dayLabel: dayLabel(d.date) };
+  });
+
+  const startDow = 4; // Friday
+  const totalCols = 7;
+  const dayNames = ['H','K','Sz','Cs','P','Sz','V'];
+
+  let html = `<div class="hm-labels">${dayNames.map(n=>`<div class="hm-label">${n}</div>`).join('')}</div>`;
+
+  const padded = Array(startDow).fill(null).concat(cells);
+
+  html += `<div class="heatmap-grid" style="grid-template-columns:repeat(${totalCols},18px);">`;
+  padded.forEach((c, idx) => {
+    if (!c) {
+      html += `<div style="width:16px;height:16px;"></div>`;
+    } else {
+      html += `<div class="hm-cell" style="background:${c.color};"
+        data-date="${c.date}" data-val="${c.v}" data-dev="${c.dev}" data-sign="${c.sign}" data-label="${c.dayLabel}"></div>`;
+    }
+  });
+  html += '</div>';
+
+  container.innerHTML = html;
+
+  const lgStops = 20;
+  let lgHtml = '<span>Alacsony</span><div class="hm-legend-bar">';
+  for (let i = 0; i < lgStops; i++) {
+    const t = i / (lgStops - 1);
+    const v = mn + t * (mx - mn);
+    lgHtml += `<div class="hm-legend-cell" style="background:${hmColor(v)};"></div>`;
+  }
+  lgHtml += `</div><span>Magas (max: ${fmtFull(mx)})</span>`;
+  document.getElementById('hmLegend').innerHTML = lgHtml;
+
+  container.querySelectorAll('.hm-cell').forEach(el => {
+    el.addEventListener('mouseenter', e => {
+      const r = el.getBoundingClientRect();
+      tooltip.style.display = 'block';
+      tooltip.innerHTML = `<strong>${el.dataset.label} (${el.dataset.date})</strong><br>Napi veszteség: <strong>${fmtFull(+el.dataset.val)}</strong><br>Átlagtól: ${el.dataset.sign}${el.dataset.dev}%`;
+      tooltip.style.left = (r.right + 8) + 'px';
+      tooltip.style.top = (r.top - 8) + 'px';
+    });
+    el.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+  });
+
+  const top5 = deltas.map((v, i) => ({ date: DAILY[i].date, val: v }))
+    .sort((a, b) => b.val - a.val).slice(0, 5);
+  const top5el = document.getElementById('hmTop5');
+  const fieldUnit = { personnel: 'fő', uav: 'db', artillery: 'db', afv: 'db' };
+  if (top5el) {
+    top5el.innerHTML = top5.map(d =>
+      `<li><strong>${d.date}</strong> — +${fmtFull(d.val)} ${fieldUnit[hmField] || ''}</li>`
+    ).join('');
+    const top5title = top5el.previousElementSibling;
+    if (top5title && top5title.classList.contains('section-title')) {
+      top5title.textContent = `Top 5 legintenzívebb nap — ${fieldLabels[hmField]}`;
+    }
+  }
+
+  const labels = DAILY.map(d => dayLabel(d.date));
+  const fieldColors = { personnel:'rgba(192,57,43,0.7)', uav:'rgba(39,174,96,0.7)', artillery:'rgba(243,156,18,0.7)', afv:'rgba(230,126,34,0.7)' };
+
+  destroyChart('hm-bar-chart');
+  const ctx = document.getElementById('hm-bar-chart');
+  chartInstances['hm-bar-chart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: fieldLabels[hmField],
+        data: deltas,
+        backgroundColor: fieldColors[hmField]
+      }]
+    },
+    options: mergeDefaults({ plugins: { legend: { display: false } } })
+  });
+}
+
+// ============================================================
+//  CSV EXPORT
+// ============================================================
+function exportCSV() {
+  const header = 'date,war_day,personnel_total,personnel_daily,tanks_total,tanks_daily,artillery_total,artillery_daily,uav_total,uav_daily,source_url\n';
+  const rows = DAILY.map((d, i) => {
+    const prev = i === 0 ? MONTHLY[MONTHLY.length-1] : DAILY[i-1];
+    return [
+      d.date,
+      warDay(d.date),
+      d.personnel,
+      Math.max(0, d.personnel - prev.personnel),
+      d.tanks,
+      Math.max(0, d.tanks - prev.tanks),
+      d.artillery,
+      Math.max(0, d.artillery - prev.artillery),
+      d.uav,
+      Math.max(0, d.uav - prev.uav),
+      'https://index.minfin.com.ua/ua/reference/casualties/'
+    ].join(',');
+  });
+  const csv = header + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ua-war-losses-2026-05.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+//  INITIAL RENDER
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  renderOverview();
+});
+
+// Ablak átméretezésekor újrarajzolás (responsive:false esetén manuálisan kell)
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    Object.keys(chartInstances).forEach(id => {
+      sizeCanvas(id);
+      chartInstances[id].resize();
+    });
+  }, 150);
+});
+</script>
+</body>
+</html>
+
+.addEventListener('DOMContentLoaded', () => {
   renderOverview();
 });
 
