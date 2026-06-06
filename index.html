@@ -460,6 +460,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       </div>
       <div class="hm-legend" id="hmLegend"></div>
       <div class="chart-note">Vigye az egeret a cellára a részletes adatokhoz.</div>
+      <div class="chart-note" id="hmGapNote" style="display:none;color:#f1c40f;"></div>
     </div>
     <div class="card">
       <div class="section-title" id="hmStatsTitle">Összefoglaló — Személyi veszteség</div>
@@ -672,8 +673,7 @@ const MONTHLY = [
   {date:"2025-09-30",personnel:1110560,tanks:11222,afv:23291,artillery:33311,mlrs:1505,airdef:1222,planes:427,helicopters:346,uav:65303,missiles:3790,ships:28,submarines:1,vehicles:63241,special:3970,robots:0},
   {date:"2025-12-31",personnel:1207910,tanks:11481,afv:23845,artillery:35642,mlrs:1586,airdef:1266,planes:434,helicopters:347,uav:97684,missiles:4136,ships:28,submarines:2,vehicles:72247,special:4035,robots:0},
   {date:"2026-04-30",personnel:1330290,tanks:11901,afv:24493,artillery:40944,mlrs:1756,airdef:1356,planes:435,helicopters:352,uav:263360,missiles:4579,ships:33,submarines:2,vehicles:92606,special:4148,robots:0},
-  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519},
-  {date:"2026-06-06",personnel:1372270,tanks:11983,afv:24696,artillery:43397,mlrs:0,airdef:1405,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:103658,special:4253,robots:1585}
+  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519}
 ];
 
 const DAILY = [
@@ -707,8 +707,7 @@ const DAILY = [
   {date:"2026-05-28",personnel:1360110,tanks:11956,afv:24625,artillery:42832,mlrs:1806,airdef:1397,planes:436,helicopters:353,uav:314902,missiles:4687,ships:33,submarines:2,vehicles:99906,special:4227,robots:1492},
   {date:"2026-05-29",personnel:1361070,tanks:11958,afv:24636,artillery:42860,mlrs:1808,airdef:1397,planes:436,helicopters:353,uav:316652,missiles:4687,ships:33,submarines:2,vehicles:100230,special:4227,robots:1496},
   {date:"2026-05-30",personnel:1362500,tanks:11960,afv:24643,artillery:42930,mlrs:1813,airdef:1398,planes:436,helicopters:353,uav:318433,missiles:4693,ships:33,submarines:2,vehicles:100713,special:4231,robots:1500},
-  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519},
-  {date:"2026-06-06",personnel:1372270,tanks:11983,afv:24696,artillery:43397,mlrs:0,airdef:1405,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:103658,special:4253,robots:1585}
+  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519}
 ];
 
 // ============================================================
@@ -822,16 +821,46 @@ function fmtFull(n) {
   return n.toLocaleString('hu-HU');
 }
 
-// Daily deltas from DAILY array
+// Number of calendar days between two ISO date strings (min. 1)
+function dayGap(dateStr, prevDateStr) {
+  return Math.max(1, Math.round((new Date(dateStr) - new Date(prevDateStr)) / 86400000));
+}
+
+// Returns a parallel array: gap[i] = how many days the entry at index i covers
+// (1 = normal consecutive day, >1 = the scraper missed N-1 days and this entry's
+// delta is actually the SUM of losses across that whole gap, not a single day)
+function dailyGaps(arr) {
+  const res = [];
+  const prevDate0 = MONTHLY[MONTHLY.length - 1].date;
+  for (let i = 0; i < arr.length; i++) {
+    const prevDate = i === 0 ? prevDate0 : arr[i-1].date;
+    res.push(dayGap(arr[i].date, prevDate));
+  }
+  return res;
+}
+
+// Daily deltas from DAILY array.
+// IMPORTANT — gap normalization: if the scraper missed one or more days
+// (e.g. it last ran on máj. 31, then again jún. 6 — a 6-napos rés), the raw
+// difference between the two entries is the SUM of ~6 days of losses, not a
+// single day's value. Displaying that raw number as "one day" creates a
+// misleading spike. Instead we spread it evenly across the missing days
+// (raw delta ÷ gap) to get a defensible daily-average estimate. This is
+// flagged to the user via dailyGaps() wherever it matters (see "rés" notes).
 function dailyDeltas(arr, field) {
   const res = [];
   // first day delta vs last monthly point
   const prev0 = MONTHLY[MONTHLY.length - 1][field];
+  const prevDate0 = MONTHLY[MONTHLY.length - 1].date;
   for (let i = 0; i < arr.length; i++) {
     const prev = i === 0 ? prev0 : arr[i-1][field];
-    let delta = Math.max(0, arr[i][field] - prev);
+    const prevDate = i === 0 ? prevDate0 : arr[i-1].date;
+    const gap = dayGap(arr[i].date, prevDate);
+    let raw = Math.max(0, arr[i][field] - prev);
     // Suppress robot tracking-start spike: if prev was 0 and delta > 100, treat as 0
-    if (field === 'robots' && prev === 0 && delta > 100) delta = 0;
+    if (field === 'robots' && prev === 0 && raw > 100) raw = 0;
+    // Spread multi-day gaps evenly into a daily-average estimate
+    const delta = gap > 1 ? Math.round(raw / gap) : raw;
     res.push(delta);
   }
   return res;
@@ -1786,10 +1815,7 @@ function renderAnalytics() {
   // ── RELATÍV MUTATÓK ──────────────────────────────────────────────
 
   // A) Heti gyorsulás: rolling 7-day avg vs previous 7-day avg
-  const diffs = DAILY.map((d,i) => {
-    const p = i===0 ? MONTHLY[MONTHLY.length-1].personnel : DAILY[i-1].personnel;
-    return Math.max(0, d.personnel - p);
-  });
+  const diffs = dailyDeltas(DAILY, 'personnel');
   const accelData = [], accelLabels = [];
   for (let i = 7; i < diffs.length; i++) {
     const curr7 = diffs.slice(i-6, i+1).reduce((a,b)=>a+b,0)/7;
@@ -1818,8 +1844,8 @@ function renderAnalytics() {
       ((new Date(pts[pts.length-1].date) - new Date(pts[0].date)) / 86400000));
   }
   function year2026Avg(field) {
-    const ds = DAILY.map((d,i)=>({ v: Math.max(0, d[field]-(i===0?MONTHLY[MONTHLY.length-1][field]:DAILY[i-1][field])) }));
-    return Math.round(ds.reduce((a,b)=>a+b.v,0)/ds.length);
+    const ds = dailyDeltas(DAILY, field);
+    return Math.round(ds.reduce((a,b)=>a+b,0)/ds.length);
   }
   const years = [2022,2023,2024,2025];
   const pYears = years.map(y=>yearAvg('personnel',y)).concat([year2026Avg('personnel')]);
@@ -1868,19 +1894,8 @@ function renderHeatmapContent() {
   document.getElementById('hmTitle').textContent = fieldLabels[hmField] + ' — napi hőtérkép (2026 május)';
   document.getElementById('hmBarTitle').textContent = 'Napi ' + fieldLabels[hmField].toLowerCase() + ' (máj. 2026)';
 
-  // compute deltas
-  function getDeltas(field) {
-    const res = [];
-    for (let i = 0; i < DAILY.length; i++) {
-      const prev = i === 0 ? MONTHLY[MONTHLY.length-1][field] : DAILY[i-1][field];
-      let delta = Math.max(0, DAILY[i][field] - prev);
-      if (field === 'robots' && prev === 0 && delta > 100) delta = 0;
-      res.push(delta);
-    }
-    return res;
-  }
-
-  const deltas = getDeltas(hmField);
+  const deltas = dailyDeltas(DAILY, hmField);
+  const hmGaps = dailyGaps(DAILY);
   const avg = deltas.reduce((a,b)=>a+b,0)/deltas.length;
   const mn = Math.min(...deltas);
   const mx = Math.max(...deltas);
@@ -1908,7 +1923,7 @@ function renderHeatmapContent() {
     const v = deltas[i];
     const dev = avg > 0 ? ((v - avg)/avg*100).toFixed(1) : 0;
     const sign = dev > 0 ? '+' : '';
-    return { date: d.date, v, dev, sign, color: hmColor(v), dayLabel: dayLabel(d.date) };
+    return { date: d.date, v, dev, sign, color: hmColor(v), dayLabel: dayLabel(d.date), gap: hmGaps[i] };
   });
 
   // 7 columns = days of week (Mon–Sun approx)
@@ -1928,8 +1943,9 @@ function renderHeatmapContent() {
     if (!c) {
       html += `<div style="width:16px;height:16px;"></div>`;
     } else {
-      html += `<div class="hm-cell" style="background:${c.color};"
-        data-date="${c.date}" data-val="${c.v}" data-dev="${c.dev}" data-sign="${c.sign}" data-label="${c.dayLabel}"></div>`;
+      const gapStyle = c.gap > 1 ? 'box-shadow:inset 0 0 0 2px rgba(255,255,255,0.55);' : '';
+      html += `<div class="hm-cell" style="background:${c.color};${gapStyle}"
+        data-date="${c.date}" data-val="${c.v}" data-dev="${c.dev}" data-sign="${c.sign}" data-label="${c.dayLabel}" data-gap="${c.gap}"></div>`;
     }
   });
   html += '</div>';
@@ -1947,12 +1963,26 @@ function renderHeatmapContent() {
   lgHtml += `</div><span>Magas (max: ${fmtFull(mx)})</span>`;
   document.getElementById('hmLegend').innerHTML = lgHtml;
 
+  // Multi-day gap warning (e.g. scraper kihagyott napok → összevont adat)
+  const gapNoteEl = document.getElementById('hmGapNote');
+  const gappedCells = cells.filter(c => c.gap > 1);
+  if (gappedCells.length > 0) {
+    const gapDates = gappedCells.map(c => `${c.dayLabel} (${c.gap} nap)`).join(', ');
+    gapNoteEl.style.display = 'block';
+    gapNoteEl.innerHTML = `⚠ A fehér kerettel jelölt cellák adatgyűjtési rést jeleznek (a forrás több nap veszteségét egyszerre jelentette): ${gapDates}. Ezeknél az érték az érintett napok <strong>napi átlag becslése</strong>, nem önálló napi mérés.`;
+  } else {
+    gapNoteEl.style.display = 'none';
+  }
+
   // Tooltip events
   container.querySelectorAll('.hm-cell').forEach(el => {
     el.addEventListener('mouseenter', e => {
       const r = el.getBoundingClientRect();
       tooltip.style.display = 'block';
-      tooltip.innerHTML = `<strong>${el.dataset.label} (${el.dataset.date})</strong><br>Napi veszteség: <strong>${fmtFull(+el.dataset.val)}</strong><br>Átlagtól: ${el.dataset.sign}${el.dataset.dev}%`;
+      const gapNote = (+el.dataset.gap > 1)
+        ? `<br><span style="color:#f1c40f;">⚠ ${el.dataset.gap} napos adatrés — a forrás ennyi nap összesített veszteségét jelentette egyben; az érték ezek napi átlaga, becslés.</span>`
+        : '';
+      tooltip.innerHTML = `<strong>${el.dataset.label} (${el.dataset.date})</strong><br>Napi veszteség: <strong>${fmtFull(+el.dataset.val)}</strong> ${(+el.dataset.gap > 1) ? '<em>(napi átlag becslés)</em>' : ''}<br>Átlagtól: ${el.dataset.sign}${el.dataset.dev}%${gapNote}`;
       tooltip.style.left = (r.right + 8) + 'px';
       tooltip.style.top = (r.top - 8) + 'px';
     });
