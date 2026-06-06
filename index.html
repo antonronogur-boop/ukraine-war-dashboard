@@ -757,13 +757,13 @@ const eventLinesPlugin = {
     const { ctx, chartArea, scales } = chart;
     if (!scales.x || !chartArea) return;
     chart.config.options._eventLines.forEach(ev => {
-      // q mező: pl. '2024 Q3' → illeszkedik '2024 Q3' és '2024 Q3*' labelekre is
       const qBase = ev.q || ev.label || ev.shortLabel || '';
       const idx = chart.data.labels.findIndex(l =>
-        l === qBase || l === qBase + '*' || (ev.shortLabel && l === ev.shortLabel) || (ev.label && l === ev.label)
+        l === qBase || l === qBase + '*' || l === qBase.replace('*','')
       );
       if (idx < 0) return;
-      const x = scales.x.getPixelForTick(idx);
+      // Chart.js 4: category scale → getPixelForValue(index)
+      const x = scales.x.getPixelForValue(idx);
       ctx.save();
       ctx.strokeStyle = ev.color;
       ctx.lineWidth = 1.5;
@@ -789,8 +789,11 @@ const periodShadingPlugin = {
     const { ctx, chartArea, scales } = chart;
     if (!scales.x || !chartArea) return;
     chart.config.options._periods.forEach(p => {
-      const x1 = scales.x.getPixelForTick(chart.data.labels.indexOf(p.from));
-      const x2 = scales.x.getPixelForTick(chart.data.labels.indexOf(p.to));
+      const i1 = chart.data.labels.findIndex(l => l === p.from || l === p.from + '*');
+      const i2 = chart.data.labels.findIndex(l => l === p.to || l === p.to + '*');
+      if (i1 < 0 || i2 < 0) return;
+      const x1 = scales.x.getPixelForValue(i1);
+      const x2 = scales.x.getPixelForValue(i2);
       if (x1 < 0 || x2 < 0) return;
       ctx.save();
       ctx.fillStyle = p.color;
