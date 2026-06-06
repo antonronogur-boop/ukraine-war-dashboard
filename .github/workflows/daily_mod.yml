@@ -28,16 +28,22 @@ jobs:
           python-version: '3.11'
 
       - name: Függőségek telepítése
-        run: pip install requests beautifulsoup4
+        run: pip install requests beautifulsoup4 openpyxl
+
+      - name: data/ könyvtár ellenőrzése
+        run: mkdir -p data
 
       - name: MoD adat scraping és index.html frissítése
         run: python scripts/mod_scraper.py index.html
+
+      - name: MoD adatok exportálása Excel adatbázisba
+        run: python scripts/mod_excel_export.py index.html data/mod_losses.xlsx
 
       - name: Változások commitolása (ha van)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Auto-update: napi MoD veszteségadat'
-          file_pattern: 'index.html'
+          file_pattern: 'index.html data/mod_losses.xlsx'
           commit_user_name: 'github-actions[bot]'
           commit_user_email: 'github-actions[bot]@users.noreply.github.com'
           skip_dirty_check: false
