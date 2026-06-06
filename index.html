@@ -469,6 +469,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <div style="margin-top:16px;">
         <div class="section-title" id="hmTop5Title">Top 5 legintenzívebb nap</div>
         <ol id="hmTop5" style="padding-left:18px;font-size:13px;line-height:2;color:var(--text);"></ol>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;">ℹ️ Jelenleg csak <strong>2026. május</strong> napi adatai érhetők el. A teljes háborús Top 5 listához napi adatokra lenne szükség 2022-től — ezek fokozatosan gyűlnek a napi MoD scraping révén.</p>
       </div>
     </div>
   </div>
@@ -571,7 +572,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="chart-title">Top repülőgép veszteségek — Oroszország vs Ukrajna (Oryx igazolt)</div>
     <div class="chart-note">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</div>
     <div style="background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.25);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#c8a84b;">
-      ⚠️ Alacsony darabszámú kategória — egyedi típusoknál kis különbségek is nagynak tűnhetnek. Az adatok az Oryx vizuálisan dokumentált listájából származnak (2024. júl.–2026. máj.).
+      ⚠️ Alacsony darabszámú kategória — egyedi típusoknál kis különbségek is nagynak tűnhetnek. <strong>Az összesítés a teljes háborús időszakot lefedi (2022. feb.–)</strong>, mert az Oryx kumulatív listát vezet. A heti bontás 2024 júliustól érhető el.
     </div>
     <canvas id="oryx-plane-types" style="height:220px;"></canvas>
     <div class="so-what">Az <strong>Su-25 csatarepülő</strong> veszteségeinek magas aránya az alacsony magasságú közellégi támogatás kockázatosságát jelzi. Az <strong>Su-34 strike aircraft</strong> megjelenése a top listán arra utal, hogy Oroszország értékes csapásmérő eszközöket is elveszít rendszeresen.</div>
@@ -671,8 +672,7 @@ const MONTHLY = [
   {date:"2025-09-30",personnel:1110560,tanks:11222,afv:23291,artillery:33311,mlrs:1505,airdef:1222,planes:427,helicopters:346,uav:65303,missiles:3790,ships:28,submarines:1,vehicles:63241,special:3970,robots:0},
   {date:"2025-12-31",personnel:1207910,tanks:11481,afv:23845,artillery:35642,mlrs:1586,airdef:1266,planes:434,helicopters:347,uav:97684,missiles:4136,ships:28,submarines:2,vehicles:72247,special:4035,robots:0},
   {date:"2026-04-30",personnel:1330290,tanks:11901,afv:24493,artillery:40944,mlrs:1756,airdef:1356,planes:435,helicopters:352,uav:263360,missiles:4579,ships:33,submarines:2,vehicles:92606,special:4148,robots:0},
-  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519},
-  {date:"2026-06-06",personnel:1372270,tanks:11983,afv:24696,artillery:43397,mlrs:0,airdef:1405,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:103658,special:4253,robots:1585}
+  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519}
 ];
 
 const DAILY = [
@@ -706,8 +706,7 @@ const DAILY = [
   {date:"2026-05-28",personnel:1360110,tanks:11956,afv:24625,artillery:42832,mlrs:1806,airdef:1397,planes:436,helicopters:353,uav:314902,missiles:4687,ships:33,submarines:2,vehicles:99906,special:4227,robots:1492},
   {date:"2026-05-29",personnel:1361070,tanks:11958,afv:24636,artillery:42860,mlrs:1808,airdef:1397,planes:436,helicopters:353,uav:316652,missiles:4687,ships:33,submarines:2,vehicles:100230,special:4227,robots:1496},
   {date:"2026-05-30",personnel:1362500,tanks:11960,afv:24643,artillery:42930,mlrs:1813,airdef:1398,planes:436,helicopters:353,uav:318433,missiles:4693,ships:33,submarines:2,vehicles:100713,special:4231,robots:1500},
-  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519},
-  {date:"2026-06-06",personnel:1372270,tanks:11983,afv:24696,artillery:43397,mlrs:0,airdef:1405,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:103658,special:4253,robots:1585}
+  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519}
 ];
 
 // ============================================================
@@ -739,12 +738,16 @@ function dayLabel(dateStr) {
 }
 
 // ── Esemény-idővonal plugin (Chart.js custom plugin) ──────────────
+// Esemény-idővonal — szinkronban az Analytics fül "Kulcsidőszakok" táblájával
+// A qLabel() függvény alapján: 2022-03-31 → "2022 Q1*", 2022-12-31 → "2022 Q4", stb.
 const KEY_EVENTS = [
-  { label: '2022 Q3*', shortLabel: '2022 Q3', name: 'Kharkiv offenzíva', color: 'rgba(46,204,113,0.75)' },
-  { label: '2022 Q4', shortLabel: '2022 Q4', name: 'Kherson felszabadítás', color: 'rgba(46,204,113,0.75)' },
-  { label: '2023 Q2', shortLabel: '2023 Q2', name: 'Ukrán ellentámadás', color: 'rgba(52,152,219,0.75)' },
-  { label: '2024 Q3', shortLabel: '2024 Q3', name: 'Kursk hadművelet', color: 'rgba(241,196,15,0.85)' },
-  { label: '2025 Q1', shortLabel: '2025 Q1', name: 'Fokozott intenzitás', color: 'rgba(231,76,60,0.7)' },
+  { q: '2022 Q2', name: 'Kijev visszavonulás', color: 'rgba(46,204,113,0.8)' },
+  { q: '2022 Q3', name: 'Kharkiv offenzíva', color: 'rgba(46,204,113,0.8)' },
+  { q: '2022 Q4', name: 'Kherson felszabadítás', color: 'rgba(46,204,113,0.8)' },
+  { q: '2023 Q2', name: 'Ukrán ellentámadás', color: 'rgba(52,152,219,0.8)' },
+  { q: '2024 Q1', name: 'Avgyijivka eleste', color: 'rgba(231,76,60,0.75)' },
+  { q: '2024 Q3', name: 'Kursk hadművelet', color: 'rgba(241,196,15,0.9)' },
+  { q: '2025 Q1', name: 'Fokozott keleti nyomás', color: 'rgba(231,76,60,0.75)' },
 ];
 
 const eventLinesPlugin = {
@@ -754,7 +757,11 @@ const eventLinesPlugin = {
     const { ctx, chartArea, scales } = chart;
     if (!scales.x || !chartArea) return;
     chart.config.options._eventLines.forEach(ev => {
-      const idx = chart.data.labels.findIndex(l => l === ev.label || l === ev.shortLabel + '*' || l === ev.shortLabel);
+      // q mező: pl. '2024 Q3' → illeszkedik '2024 Q3' és '2024 Q3*' labelekre is
+      const qBase = ev.q || ev.label || ev.shortLabel || '';
+      const idx = chart.data.labels.findIndex(l =>
+        l === qBase || l === qBase + '*' || (ev.shortLabel && l === ev.shortLabel) || (ev.label && l === ev.label)
+      );
       if (idx < 0) return;
       const x = scales.x.getPixelForTick(idx);
       ctx.save();
@@ -1108,14 +1115,25 @@ async function renderOryx() {
 
   // ── Heti orosz tankveszteség (Oryx delta) ─────────────────
   const wkDelta = rus.weekly_delta;
+  // Dátumformátum: "2024-07-02" → "24.07." rövid, de tooltip-ben teljes dátum
+  const wkShortLabels = wkDelta.map(w => {
+    const d = w.date.split('-');
+    return d[0].slice(2) + '.' + d[1] + '.';
+  });
   sizeCanvas('oryx-rus-weekly-tanks');
   makeChart('oryx-rus-weekly-tanks', 'bar', {
-    labels: wkDelta.map(w=>w.date.slice(5)),
+    labels: wkShortLabels,
     datasets: [{ data: wkDelta.map(w=>w.tanks), backgroundColor:'#c0392b', borderRadius:2 }]
   }, {
     responsive:false, animation:false, maintainAspectRatio:false,
-    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>'+'+fmt(ctx.parsed.y)+' db'}} },
-    scales:{ x:{ticks:{color:C,font:{size:9},autoSkip:true,maxTicksLimit:14},grid:{color:G}},
+    plugins:{ legend:{display:false}, tooltip:{callbacks:{
+      title: (items) => {
+        const i = items[0].dataIndex;
+        return wkDelta[i]?.date || '';
+      },
+      label: ctx=>'+'+fmt(ctx.parsed.y)+' db (Oryx igazolt)'
+    }} },
+    scales:{ x:{ticks:{color:C,font:{size:9},autoSkip:true,maxTicksLimit:16},grid:{color:G}},
              y:{ticks:{color:C,font:{size:10}},grid:{color:G}} }
   });
 
@@ -1522,21 +1540,33 @@ function toggleUAV() {
 
 function renderEquipment() {
   const last = DAILY[DAILY.length - 1];
-  const categories = [
-    { label: 'UAV drón', value: last.uav, color: '#27ae60' },
+
+  // UAV toggle: ha ki van kapcsolva, kiszűrjük
+  const allCats = [
+    { label: 'UAV drón', value: last.uav, color: '#27ae60', isUAV: true },
     { label: 'Logisztikai jármű', value: last.vehicles, color: '#8e44ad' },
     { label: 'Páncélozott harcjármű (APV/IFV)', value: last.afv, color: '#e67e22' },
     { label: 'Tüzérség', value: last.artillery, color: '#f39c12' },
     { label: 'Harckocsi', value: last.tanks, color: '#e74c3c' },
     { label: 'Cirkálórakéta', value: last.missiles, color: '#1abc9c' },
-    { label: 'MLRS', value: last.mlrs, color: '#e74c3c' },
-    { label: 'Repülő', value: last.planes, color: '#3498db' },
+    { label: 'MLRS', value: last.mlrs, color: '#3498db' },
+    { label: 'Repülő', value: last.planes, color: '#5dade2' },
     { label: 'Légvédelem', value: last.airdef, color: '#2980b9' },
     { label: 'Helikopter', value: last.helicopters, color: '#9b59b6' },
     { label: 'Robotrendszer / speciális', value: last.robots || 0, color: '#7f8c8d' },
     { label: 'Hajó', value: last.ships, color: '#16a085' },
     { label: 'Tengeralattjáró', value: last.submarines, color: '#1a5276' }
-  ].sort((a,b) => b.value - a.value);
+  ];
+  const categories = allCats
+    .filter(c => showUAV || !c.isUAV)
+    .sort((a,b) => b.value - a.value);
+
+  // Canvas magasság rögzítése hogy ne nőjön toggle-nél
+  const barCanvas = document.getElementById('eq-bar-chart');
+  if (barCanvas) {
+    const h = Math.max(280, categories.length * 28 + 40);
+    barCanvas.parentElement.style.height = h + 'px';
+  }
 
   makeChart('eq-bar-chart', 'bar', {
     labels: categories.map(c => c.label),
