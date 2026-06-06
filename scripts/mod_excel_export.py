@@ -62,7 +62,7 @@ FIELDS = [
     'submarines', 'vehicles', 'special', 'robots'
 ]
 
-HEADERS = ['date', 'war_day'] + [
+HEADERS = ['date', 'war_day', 'gap_days'] + [
     col for f in FIELDS for col in (f + '_total', f + '_daily')
 ]
 
@@ -100,17 +100,33 @@ def extract_daily_from_html(html_path: str) -> list[dict]:
 
 
 def compute_rows(daily_data: list[dict]) -> list[list]:
-    """Kiszámolja a napi deltákat és összerakja a sorokat."""
+    """
+    Kiszámolja a napi deltákat és összerakja a sorokat.
+
+    Adatrés-normalizálás: ha a scraper egy vagy több napot kihagyott
+    (pl. máj. 31 → jún. 6, 6 napos rés), a két bejegyzés közti nyers
+    különbség a KIHAGYOTT NAPOK ÖSSZESÍTETT vesztesége, nem egyetlen
+    napé. Ha ezt egy az egyben "napi" értékként mentenénk, mesterséges
+    tüskét hoznánk létre az adatbázisban. Ehelyett egyenletesen szétosztjuk
+    a rés napjaira (nyers delta ÷ rés hossza), és a gap_days oszlopban
+    jelöljük, hogy az adott sor becsült napi átlagot tartalmaz.
+    """
     rows = []
     for i, d in enumerate(daily_data):
         prev = daily_data[i - 1] if i > 0 else None
-        row = [d['date'], war_day(d['date'])]
+        if prev:
+            gap = max(1, (Date.fromisoformat(d['date']) - Date.fromisoformat(prev['date'])).days)
+        else:
+            gap = 1
+        row = [d['date'], war_day(d['date']), gap]
         for f in FIELDS:
             total = d.get(f, 0) or 0
-            daily = max(0, total - (prev.get(f, 0) or 0)) if prev else 0
+            raw = max(0, total - (prev.get(f, 0) or 0)) if prev else 0
             # Robots spike javítása: ha az előző 0 volt és az ugrás >100, az nem valódi veszteség
-            if f == 'robots' and (prev is None or (prev.get(f, 0) or 0) == 0) and daily > 100:
-                daily = 0
+            if f == 'robots' and (prev is None or (prev.get(f, 0) or 0) == 0) and raw > 100:
+                raw = 0
+            # Több napos rés esetén egyenletes szétosztás napi átlagként
+            daily = round(raw / gap) if gap > 1 else raw
             row.extend([total, daily])
         rows.append(row)
     return rows
@@ -144,6 +160,19 @@ def save_to_excel(rows: list[list], xlsx_path: str):
     if os.path.exists(xlsx_path):
         wb = load_workbook(xlsx_path)
         ws = wb.active
+        # Migráció: ha a régi fájlban nincs még 'gap_days' oszlop, beszúrjuk
+        # a 3. helyre (régi sorok esetén 1-es alapértékkel — ezekről nem
+        # tudjuk utólag, hogy volt-e rés, de a korábbi automatikus futások
+        # napi rendszerességgel mentek, tehát az 1 a legjobb feltételezés).
+        existing_header = [c.value for c in ws[1]]
+        if existing_header and 'gap_days' not in existing_header:
+            ws.insert_cols(3)
+            ws.cell(row=1, column=3, value='gap_days')
+            ws.cell(row=1, column=3).font = openpyxl.styles.Font(bold=True)
+            for r in range(2, ws.max_row + 1):
+                if ws.cell(row=r, column=1).value:
+                    ws.cell(row=r, column=3, value=1)
+            log.info("Migráció: 'gap_days' oszlop hozzáadva a meglévő adatbázishoz (régi sorok = 1).")
     else:
         wb = Workbook()
         ws = wb.active
