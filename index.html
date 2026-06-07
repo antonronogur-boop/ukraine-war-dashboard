@@ -672,10 +672,17 @@ const MONTHLY = [
   {date:"2025-06-30",personnel:1020010,tanks:10980,afv:22922,artillery:29718,mlrs:1427,airdef:1190,planes:420,helicopters:340,uav:42796,missiles:3436,ships:28,submarines:1,vehicles:53593,special:3921,robots:0},
   {date:"2025-09-30",personnel:1110560,tanks:11222,afv:23291,artillery:33311,mlrs:1505,airdef:1222,planes:427,helicopters:346,uav:65303,missiles:3790,ships:28,submarines:1,vehicles:63241,special:3970,robots:0},
   {date:"2025-12-31",personnel:1207910,tanks:11481,afv:23845,artillery:35642,mlrs:1586,airdef:1266,planes:434,helicopters:347,uav:97684,missiles:4136,ships:28,submarines:2,vehicles:72247,special:4035,robots:0},
-  {date:"2026-04-30",personnel:1330290,tanks:11901,afv:24493,artillery:40944,mlrs:1756,airdef:1356,planes:435,helicopters:352,uav:263360,missiles:4579,ships:33,submarines:2,vehicles:92606,special:4148,robots:0},
-  {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519},
-  {date:"2026-06-06",personnel:1372270,tanks:11983,afv:24696,artillery:43397,mlrs:0,airdef:1405,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:103658,special:4253,robots:1585},
-  {date:"2026-06-07",personnel:1373620,tanks:11989,afv:24700,artillery:43479,mlrs:0,airdef:1407,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:104051,special:4257,robots:1595}
+  {date:"2026-04-30",personnel:1330290,tanks:11901,afv:24493,artillery:40944,mlrs:1756,airdef:1356,planes:435,helicopters:352,uav:263360,missiles:4579,ships:33,submarines:2,vehicles:92606,special:4148,robots:0}
+  // NOTE: 2026-05-31 was REMOVED from here — it was an exact duplicate of the
+  // DAILY array's own 2026-05-31 entry. Having it in BOTH arrays caused two
+  // serious bugs: (1) qLabel() mapped both 2026-04-30 AND 2026-05-31 to the
+  // same "2026 Q2*" quarter, producing duplicate quarter labels on every
+  // quarterly chart; (2) dailyDeltas() used MONTHLY's last point as the
+  // "previous day" baseline for DAILY[0] (2026-05-01) — but 2026-05-31 is
+  // chronologically AFTER 2026-05-01, so the subtraction went backwards
+  // (negative → silently clamped to 0), making May 1st's daily losses vanish.
+  // MONTHLY must only contain PRE-daily-tracking checkpoints; the daily
+  // record for any date already covered by DAILY belongs ONLY in DAILY.
 ];
 
 const DAILY = [
@@ -710,8 +717,12 @@ const DAILY = [
   {date:"2026-05-29",personnel:1361070,tanks:11958,afv:24636,artillery:42860,mlrs:1808,airdef:1397,planes:436,helicopters:353,uav:316652,missiles:4687,ships:33,submarines:2,vehicles:100230,special:4227,robots:1496},
   {date:"2026-05-30",personnel:1362500,tanks:11960,afv:24643,artillery:42930,mlrs:1813,airdef:1398,planes:436,helicopters:353,uav:318433,missiles:4693,ships:33,submarines:2,vehicles:100713,special:4231,robots:1500},
   {date:"2026-05-31",personnel:1364060,tanks:11962,afv:24657,artillery:42987,mlrs:1819,airdef:1399,planes:436,helicopters:353,uav:320327,missiles:4693,ships:33,submarines:2,vehicles:101237,special:4234,robots:1519},
-  {date:"2026-06-06",personnel:1372270,tanks:11983,afv:24696,artillery:43397,mlrs:0,airdef:1405,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:103658,special:4253,robots:1585},
-  {date:"2026-06-07",personnel:1373620,tanks:11989,afv:24700,artillery:43479,mlrs:0,airdef:1407,planes:436,helicopters:353,uav:0,missiles:0,ships:33,submarines:2,vehicles:104051,special:4257,robots:1595}
+  {date:"2026-06-01",personnel:1365470,tanks:11966,afv:24659,artillery:43037,mlrs:1820,airdef:1399,planes:436,helicopters:353,uav:322179,missiles:4693,ships:33,submarines:2,vehicles:101621,special:4239,robots:1528},
+  {date:"2026-06-02",personnel:1366910,tanks:11969,afv:24666,artillery:43112,mlrs:1821,airdef:1400,planes:436,helicopters:353,uav:323762,missiles:4693,ships:33,submarines:2,vehicles:102138,special:4241,robots:1542},
+  {date:"2026-06-03",personnel:1368040,tanks:11974,afv:24673,artillery:43172,mlrs:1826,airdef:1403,planes:436,helicopters:353,uav:325615,missiles:4733,ships:33,submarines:2,vehicles:102575,special:4245,robots:1548},
+  {date:"2026-06-04",personnel:1369340,tanks:11978,afv:24676,artillery:43247,mlrs:1830,airdef:1403,planes:436,helicopters:353,uav:327726,missiles:4733,ships:33,submarines:2,vehicles:102971,special:4248,robots:1562},
+  {date:"2026-06-05",personnel:1370890,tanks:11980,afv:24684,artillery:43315,mlrs:1832,airdef:1404,planes:436,helicopters:353,uav:329772,missiles:4733,ships:33,submarines:2,vehicles:103300,special:4250,robots:1576},
+  {date:"2026-06-06",personnel:1372270,tanks:11983,afv:24696,artillery:43397,mlrs:1837,airdef:1405,planes:436,helicopters:353,uav:331818,missiles:4733,ships:33,submarines:2,vehicles:103658,special:4253,robots:1585}
 ];
 
 // ============================================================
@@ -734,6 +745,17 @@ function qLabel(dateStr) {
   if (y === 2022 && q === 1) label += '*';
   if (y === 2026 && q === 2) label += '*';
   return label;
+}
+
+// Megosztott x-tengely tick-konfiguráció a negyedéves (MONTHLY-alapú) diagramokhoz.
+// A baseOpts() defaultja maxTicksLimit:12 + autoSkip:true — ez napi (sűrű, ~30+ pontos)
+// diagramoknál helyes (különben olvashatatlan a tengely), de a 17 pontos negyedéves
+// MONTHLY-sorozatnál ez azt okozta, hogy a Chart.js néhány negyedévcímkét automatikusan
+// elrejtett (pl. "2025-ből csak Q1 látszik" tünet — az adat megvan, csak a label nem
+// jelent meg). Minden negyedéves diagram ezt a configot kapja, hogy mind a 17 negyedév
+// felirata látszódjon, kihagyás nélkül.
+function quarterAxisTicks() {
+  return { color: C, font: { size: 9 }, maxRotation: 60, minRotation: 60, autoSkip: false, maxTicksLimit: 100 };
 }
 
 function dayLabel(dateStr) {
@@ -1427,35 +1449,31 @@ function setTrendFilter(days, btn) {
 }
 
 function renderTrends() {
-  const slice = DAILY.slice(-currentTrendDays);
-  const labels = slice.map(d => dayLabel(d.date));
+  // IMPORTANT: deltas must always be derived from the FULL DAILY series first
+  // (so every point has its correct previous-day baseline and benefits from
+  // gap normalization in dailyDeltas), and only THEN sliced for display.
+  // Slicing DAILY before computing deltas — as the old code did via a local
+  // "sliceDeltas" helper — breaks the baseline of the slice's first element
+  // (it would compare against MONTHLY's last point instead of the actual
+  // previous day) and bypassed the multi-day-gap normalization entirely,
+  // which is exactly what produced the fake single-day spikes.
+  const labels = DAILY.slice(-currentTrendDays).map(d => dayLabel(d.date));
 
-  const pDeltas = dailyDeltas(slice, 'personnel');
-  const uDeltas = dailyDeltas(slice, 'uav');
-  const aDeltas = dailyDeltas(slice, 'artillery');
-  const afvDeltas = dailyDeltas(slice, 'afv');
+  const pDFull = dailyDeltas(DAILY, 'personnel');
+  const uDFull = dailyDeltas(DAILY, 'uav');
+  const aDFull = dailyDeltas(DAILY, 'artillery');
+  const afDFull = dailyDeltas(DAILY, 'afv');
 
-  // fix: first delta for sliced array should use correct prev
-  // recalculate properly
-  const sliceIdx = DAILY.length - currentTrendDays;
-  function sliceDeltas(field) {
-    const res = [];
-    for (let i = 0; i < slice.length; i++) {
-      const globalIdx = sliceIdx + i;
-      const prev = globalIdx === 0 ? MONTHLY[MONTHLY.length-1][field] : DAILY[globalIdx-1][field];
-      let delta = Math.max(0, DAILY[globalIdx][field] - prev);
-      if (field === 'robots' && prev === 0 && delta > 100) delta = 0;
-      res.push(delta);
-    }
-    return res;
-  }
+  const pD = pDFull.slice(-currentTrendDays);
+  const uD = uDFull.slice(-currentTrendDays);
+  const aD = aDFull.slice(-currentTrendDays);
+  const afD = afDFull.slice(-currentTrendDays);
 
-  const pD = sliceDeltas('personnel');
-  const uD = sliceDeltas('uav');
-  const aD = sliceDeltas('artillery');
-  const afD = sliceDeltas('afv');
-  const pAvg = rollingAvg(pD, Math.min(7, pD.length));
-  const uAvg = rollingAvg(uD, Math.min(7, uD.length));
+  // Rolling average computed on the FULL series then sliced, so the edge
+  // points of the visible window still use real prior days (not a truncated,
+  // artificially-shortened window).
+  const pAvg = rollingAvg(pDFull, 7).slice(-currentTrendDays);
+  const uAvg = rollingAvg(uDFull, 7).slice(-currentTrendDays);
 
   makeChart('tr-personnel-chart', 'bar', {
     labels,
@@ -1502,7 +1520,7 @@ function renderHistory() {
       borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3
     }]
   }, {
-    ...mergeDefaults({ scales: { y: { ticks: { callback: v => fmt(v) } } } }),
+    ...mergeDefaults({ scales: { x: { ticks: quarterAxisTicks() }, y: { ticks: { callback: v => fmt(v) } } } }),
     _eventLines: KEY_EVENTS,
     _periods: KEY_PERIODS
   });
@@ -1516,7 +1534,7 @@ function renderHistory() {
       borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)',
       borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3
     }]
-  }, mergeDefaults({}));
+  }, mergeDefaults({ scales: { x: { ticks: quarterAxisTicks() } } }));
 
   // UAV
   makeChart('hist-uav-chart', 'line', {
@@ -1528,7 +1546,7 @@ function renderHistory() {
       borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3
     }]
   }, mergeDefaults({
-    scales: { y: { ticks: { callback: v => fmt(v) } } }
+    scales: { x: { ticks: quarterAxisTicks() }, y: { ticks: { callback: v => fmt(v) } } }
   }));
 
   // Quarterly new losses
@@ -1551,7 +1569,7 @@ function renderHistory() {
       borderWidth: 0
     }]
   }, mergeDefaults({
-    scales: { y: { ticks: { callback: v => fmt(v) } } },
+    scales: { x: { ticks: quarterAxisTicks() }, y: { ticks: { callback: v => fmt(v) } } },
     plugins: { legend: { display: false } }
   }));
 }
@@ -1634,7 +1652,7 @@ function renderEquipment() {
       { label: 'Páncélozott', data: MONTHLY.map(d=>d.afv), borderColor:'#e67e22', backgroundColor:'rgba(230,126,34,0.08)', fill:false, tension:0.3, pointRadius:3, borderWidth:2 },
       { label: 'MLRS', data: MONTHLY.map(d=>d.mlrs), borderColor:'#f39c12', backgroundColor:'rgba(243,156,18,0.08)', fill:false, tension:0.3, pointRadius:3, borderWidth:2, borderDash:[4,3] },
     ]
-  }, mergeDefaults({ plugins: { legend: { display: true } }, scales: { y: { ticks: { callback: v => fmt(v) } } } }));
+  }, mergeDefaults({ plugins: { legend: { display: true } }, scales: { x: { ticks: quarterAxisTicks() }, y: { ticks: { callback: v => fmt(v) } } } }));
 
   // Air losses quarterly
   makeChart('eq-air-chart', 'line', {
@@ -1675,7 +1693,7 @@ function renderEquipment() {
   }, {
     responsive:false, animation:false, maintainAspectRatio:false,
     plugins:{ legend:{ display:true, labels:{color:'#6b7080',font:{size:11},boxWidth:12} }, tooltip:{mode:'index',intersect:false} },
-    scales:{ x:{ticks:{color:'#6b7080',font:{size:10},autoSkip:true,maxTicksLimit:12},grid:{color:'rgba(255,255,255,0.05)'}},
+    scales:{ x:{ticks: quarterAxisTicks(), grid:{color:'rgba(255,255,255,0.05)'}},
              y:{ticks:{color:'#6b7080',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,0.05)'}} }
   });
 }
@@ -1724,7 +1742,7 @@ function renderAnalytics() {
       data: qRates,
       backgroundColor: qRates.map(v => v > 1000 ? 'rgba(192,57,43,0.8)' : v > 600 ? 'rgba(230,126,34,0.7)' : 'rgba(243,156,18,0.6)')
     }]
-  }, mergeDefaults({ plugins: { legend: { display: false } } }));
+  }, mergeDefaults({ plugins: { legend: { display: false } }, scales: { x: { ticks: quarterAxisTicks() } } }));
 
   // Loss composition stacked %
   const compFields = ['personnel','tanks','afv','artillery','uav'];
@@ -1764,7 +1782,7 @@ function renderAnalytics() {
     datasets: compDatasets
   }, mergeDefaults({
     plugins: { legend: { display: true } },
-    scales: { x: { stacked: true }, y: { stacked: true, max: 100, ticks: { callback: v => v + '%' } } }
+    scales: { x: { ticks: quarterAxisTicks(), stacked: true }, y: { stacked: true, max: 100, ticks: { callback: v => v + '%' } } }
   }));
 
   // MILESTONES TABLE
