@@ -1,15 +1,19 @@
 name: Heti Oryx adatfrissítés
 
 on:
+  # Minden kedden 07:00 UTC (= 09:00 Budapest nyáron)
   schedule:
     - cron: '0 7 * * 2'
+
+  # Manuálisan is indítható a GitHub Actions fülön
   workflow_dispatch:
     inputs:
       force_run:
-        description: 'Kényszer futtatás'
+        description: 'Kényszer futtatás (akkor is fut ha ma már volt scraping)'
         required: false
         default: 'false'
 
+# Szükséges hogy vissza tudjon írni a repóba
 permissions:
   contents: write
 
@@ -39,9 +43,11 @@ jobs:
 
       - name: RUS scraping (Oryx)
         run: python scripts/scraper_RUS.py data/xyz_RUS.xlsx
+        continue-on-error: false
 
       - name: UKR scraping (Oryx)
         run: python scripts/scraper_UKR.py data/xyz_UKR.xlsx
+        continue-on-error: false
 
       - name: Delta kalkuláció — RUS
         run: python scripts/analysis_losses.py data/xyz_RUS.xlsx
@@ -55,13 +61,19 @@ jobs:
       - name: C_SUM generálás — UKR
         run: python scripts/collector.py data/xyz_UKR.xlsx
 
-      - name: JSON export
+      - name: JSON export (oryx_data.json)
         run: python oryx_export.py
 
-      - name: Commit és push
+      - name: Legfrissebb változások beolvasztása (divergált ág megelőzése)
+        run: git pull --rebase origin main
+
+      - name: Változások commitolása és pusholása
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'Auto-update: Oryx heti adatfrissítés'
+          commit_message: |
+            Auto-update: Oryx heti adatfrissítés (${{ github.run_id }})
+
+            Futás ideje: ${{ github.event.repository.updated_at }}
           file_pattern: 'data/xyz_RUS.xlsx data/xyz_UKR.xlsx oryx_data.json'
           commit_user_name: 'github-actions[bot]'
           commit_user_email: 'github-actions[bot]@users.noreply.github.com'

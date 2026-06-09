@@ -39,6 +39,9 @@ jobs:
       - name: MoD adatok exportálása Excel adatbázisba
         run: python scripts/mod_excel_export.py index.html data/mod_losses.xlsx
 
+      - name: Legfrissebb változások beolvasztása (divergált ág megelőzése)
+        run: git pull --rebase origin main
+
       - name: Változások commitolása (ha van)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
