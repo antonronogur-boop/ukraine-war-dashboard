@@ -28,6 +28,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Legfrissebb változások beolvasztása (divergált ág megelőzése)
+        run: git pull --rebase origin main
+
       - name: Python 3.11 telepítése
         uses: actions/setup-python@v5
         with:
@@ -63,9 +66,6 @@ jobs:
 
       - name: JSON export (oryx_data.json)
         run: python oryx_export.py
-
-      - name: Legfrissebb változások beolvasztása (divergált ág megelőzése)
-        run: git pull --rebase origin main
 
       - name: Változások commitolása és pusholása
         uses: stefanzweifel/git-auto-commit-action@v5
