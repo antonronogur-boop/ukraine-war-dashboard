@@ -73,7 +73,7 @@ def fetch_latest() -> dict | None:
         'airdef':      extract(r'Anti-aircraft warfare\s*[—–-]\s*([\d,\s]+)'),
         'planes':      extract(r'Planes\s*[—–-]\s*([\d,\s]+)'),
         'helicopters': extract(r'Helicopters\s*[—–-]\s*([\d,\s]+)'),
-        'uav':         extract(r'UAV.*?[—–-]\s*([\d,\s]+)'),
+        'uav':         extract(r'(?:UAV|[Uu]nmanned aerial|[Dd]rone).*?[—–\-]\s*([\d,\s]+)'),
         'missiles':    extract(r'Cruise missiles\s*[—–-]\s*([\d,\s]+)'),
         'ships':       extract(r'Ships.*?[—–-]\s*([\d,\s]+)'),
         'submarines':  extract(r'Submarines\s*[—–-]\s*([\d,\s]+)'),
@@ -88,6 +88,16 @@ def fetch_latest() -> dict | None:
         log.debug(f'Részleges adat: {data}')
         return None
 
+    # Sanity check: ha UAV 0-t kapott de minden egyéb mező nagyon magas,
+    # ez szinte biztosan parse-hiba (nem az, hogy aznap tényleg 0 UAV veszett el).
+    # Inkább None-t adunk vissza, mint hogy egy hibás 0-t írjunk DAILY-be.
+    if data['uav'] == 0 and data['personnel'] > 500000:
+        log.warning(
+            'UAV mező 0-nak adódott de a személyi veszteség >500k — valószínű parse-hiba. '
+            'Ellenőrizd az oldal struktúráját. A rekord NEM kerül be a DAILY tömbbe.'
+        )
+        return None
+
     # Hiányzó értékek 0-ra állítása
     for k, v in data.items():
         if k != 'date' and v is None:
@@ -98,22 +108,79 @@ def fetch_latest() -> dict | None:
     return data
 
 
+def _build_entry_line(d: dict) -> str:
+    """Összerakja egy DAILY bejegyzés JS-sorát."""
+    return (
+        f'  {{date:"{d["date"]}",'
+        f'personnel:{d["personnel"]},'
+        f'tanks:{d["tanks"]},'
+        f'afv:{d["afv"]},'
+        f'artillery:{d["artillery"]},'
+        f'mlrs:{d["mlrs"]},'
+        f'airdef:{d["airdef"]},'
+        f'planes:{d["planes"]},'
+        f'helicopters:{d["helicopters"]},'
+        f'uav:{d["uav"]},'
+        f'missiles:{d["missiles"]},'
+        f'ships:{d["ships"]},'
+        f'submarines:{d["submarines"]},'
+        f'vehicles:{d["vehicles"]},'
+        f'special:{d["special"]},'
+        f'robots:{d["robots"]}}}'
+    )
+
+
 def update_html(html_path: str, new_data: dict) -> bool:
     """
     Beolvassa az index.html-t, ellenőrzi van-e már az adat,
     és ha nem, hozzáfűzi a DAILY tömbhöz.
+
+    Felülírási logika (korrupt-adat-javítás):
+      Ha a dátum már létezik de az ott tárolt UAV érték 0 (korábbi parse-hiba
+      miatt bekerült hibás rekord), ÉS az új UAV érték > 0 (a mai scraping
+      sikeresen kinyerte), akkor a meglévő sort FELÜLÍRJA a helyes adattal.
+      Ez lehetővé teszi a self-healing viselkedést: a scraper automatikusan
+      kijavítja a régebb beírt nullás rekordokat, amint az oldal ismét
+      helyesen parsolható.
+
     Visszatér: True ha változott, False ha nem.
     """
     log.info(f'HTML olvasása: {html_path}')
     with open(html_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # Ellenőrzés: már benne van-e ez a dátum?
-    if f'"date":"{new_data["date"]}"' in content:
-        log.info(f'Már létezik ez a dátum: {new_data["date"]} — nincs teendő.')
-        return False
+    date_key = f'"date":"{new_data["date"]}"'
+    date_exists = date_key in content
 
-    # Az utolsó sor megkeresése a DAILY tömbben
+    if date_exists:
+        # Megvan a dátum — megnézzük a tárolt UAV értéket
+        # Pattern: {date:"YYYY-MM-DD",...,uav:NNN,...}
+        existing_pattern = re.compile(
+            r'\{date:"' + re.escape(new_data["date"]) + r'"[^}]+uav:(\d+)[^}]*\}'
+        )
+        m_existing = existing_pattern.search(content)
+        stored_uav = int(m_existing.group(1)) if m_existing else -1
+
+        if stored_uav == 0 and new_data['uav'] > 0:
+            # Korrupt rekord: felülírjuk
+            log.info(
+                f'{new_data["date"]}: tárolt UAV=0 (parse-hiba), '
+                f'új érték={new_data["uav"]} — felülírás.'
+            )
+            old_line = m_existing.group(0)
+            new_line = _build_entry_line(new_data)
+            new_content = content.replace(old_line, new_line, 1)
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            log.info(f'Felülírva: {new_data["date"]} → {html_path}')
+            return True
+        else:
+            log.info(
+                f'Már létezik: {new_data["date"]} (UAV={stored_uav}) — nincs teendő.'
+            )
+            return False
+
+    # Új dátum — hozzáfűzés a DAILY tömb végéhez
     # Pattern: az utolsó {...} a tömbben, amit }] követ
     last_entry_pattern = r'(\{date:"[^"]+",personnel:\d+[^}]+\})\s*\n\s*\];'
     m = re.search(last_entry_pattern, content)
@@ -121,25 +188,7 @@ def update_html(html_path: str, new_data: dict) -> bool:
         log.error('Nem található a DAILY tömb vége az index.html-ben.')
         return False
 
-    # Új sor összeállítása
-    new_line = (
-        f'  {{date:"{new_data["date"]}",'
-        f'personnel:{new_data["personnel"]},'
-        f'tanks:{new_data["tanks"]},'
-        f'afv:{new_data["afv"]},'
-        f'artillery:{new_data["artillery"]},'
-        f'mlrs:{new_data["mlrs"]},'
-        f'airdef:{new_data["airdef"]},'
-        f'planes:{new_data["planes"]},'
-        f'helicopters:{new_data["helicopters"]},'
-        f'uav:{new_data["uav"]},'
-        f'missiles:{new_data["missiles"]},'
-        f'ships:{new_data["ships"]},'
-        f'submarines:{new_data["submarines"]},'
-        f'vehicles:{new_data["vehicles"]},'
-        f'special:{new_data["special"]},'
-        f'robots:{new_data["robots"]}}}'
-    )
+    new_line = _build_entry_line(new_data)
 
     # Beillesztés: az utolsó } után vesszőt teszünk, majd az új sort
     new_content = content.replace(
