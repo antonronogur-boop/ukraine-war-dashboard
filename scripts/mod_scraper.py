@@ -57,9 +57,12 @@ def fetch_latest() -> dict | None:
     log.info(f'Legfrissebb adat dátuma: {date_str}')
 
     def extract(pattern):
-        m = re.search(pattern, text)
+        # Először normál módban próbálkozunk; ha nem sikerül, re.DOTALL-lal
+        # (a minfin oldalon egyes mezők értéke más HTML-elembe kerülhet → sortörés)
+        m = re.search(pattern, text) or re.search(pattern, text, re.DOTALL)
         if m:
-            return int(re.sub(r'[^\d]', '', m.group(1)))
+            raw = re.sub(r'[^\d]', '', m.group(1))
+            return int(raw) if raw else None
         return None
 
     # Értékek kinyerése
