@@ -1,0 +1,66 @@
+name: Napi MoD hiba-értesítés
+
+# Ez a workflow csak akkor fut, ha a "Napi MoD veszteségadat frissítés" workflow megbukott
+on:
+  workflow_run:
+    workflows: ["Napi MoD veszteségadat frissítés"]
+    types: [completed]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+
+    steps:
+      - name: GitHub Issue nyitása hiba esetén
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const title = `⚠️ Napi MoD scraping SIKERTELEN — ${run.created_at.slice(0,10)}`;
+
+            // Ne nyissunk új issue-t ha már van nyitott ugyanolyan
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'auto-error',
+            });
+            const alreadyOpen = issues.data.some(i => i.title.includes('Napi MoD scraping SIKERTELEN'));
+            if (alreadyOpen) {
+              console.log('Már van nyitott issue, nem nyitunk újat.');
+              return;
+            }
+
+            const body = [
+              '## Automatikus hibajelzés — Napi MoD scraping',
+              '',
+              `**Sikertelen futás:** [#${run.run_number}](${run.html_url})`,
+              `**Időpont:** ${run.created_at}`,
+              '',
+              '### Lehetséges okok',
+              '- A minfin.com.ua oldal struktúrája megváltozott (regex nem talál)',
+              '- Hálózati timeout (az oldal nem volt elérhető 45 másodpercen belül)',
+              '- Sanity gate megbukott: valamely mező 0-ra esett (parse-hiba)',
+              '- Git push ütközés (kézi feltöltés volt a workflow futása közben)',
+              '',
+              '### Mit kell tenni',
+              '1. Kattints a fenti futás linkre és nézd meg a hibalogot',
+              '2. Ha parse-hiba: ellenőrizd a minfin.com.ua oldalt kézzel',
+              '3. Ha push-ütközés: futtasd manuálisan a workflow-t (Actions → Run workflow)',
+              '4. Ha tartós hiba: értesítsd a fejlesztőt',
+              '',
+              '*Ez az issue automatikusan lett létrehozva.*',
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['auto-error'],
+            });
