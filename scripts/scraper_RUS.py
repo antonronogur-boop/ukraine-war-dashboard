@@ -109,7 +109,7 @@ def scrape() -> pd.DataFrame:
     df.rename(columns={'index': 'Type'}, inplace=True)
 
     for cat_name, first_type in CATEGORIES:
-        mask = df['Type'] == first_type
+        mask = df['Type'].str.startswith(first_type, na=False)
         if mask.any():
             idx = df[mask].index[0]
             cat_row = pd.DataFrame([{'Type': cat_name, 'Destroyed': None, 'Captured': None,
