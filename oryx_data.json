@@ -4,8 +4,8 @@
     "source_type": "Vizuálisan dokumentált, fotóval igazolt veszteségek",
     "note": "Ez a lista csak azokat a veszteségeket tartalmazza, amelyeket képi bizonyítékkal igazoltak. A valós veszteségek magasabbak lehetnek.",
     "first_week": "2024-07-09",
-    "last_week": "2026-06-17",
-    "total_weeks": 95,
+    "last_week": "2026-06-09",
+    "total_weeks": 94,
     "categories": {
       "tanks": "Harckocsi",
       "afv": "Páncélozott harcjármű",
@@ -21,23 +21,23 @@
       "antitank": "Páncéltörő rendszer",
       "support": "Támogató eszköz"
     },
-    "generated_at": "2026-06-17 11:51"
+    "generated_at": "2026-06-17 12:34"
   },
   "russia": {
     "totals": {
       "tanks": {
-        "destroyed": 0,
-        "captured": 0,
-        "damaged": 0,
-        "abandoned": 0,
-        "total": 0
+        "destroyed": 3222,
+        "captured": 532,
+        "damaged": 487,
+        "abandoned": 123,
+        "total": 4364
       },
       "afv": {
-        "destroyed": 8547,
-        "captured": 1280,
-        "damaged": 798,
-        "abandoned": 286,
-        "total": 10911
+        "destroyed": 7871,
+        "captured": 1036,
+        "damaged": 699,
+        "abandoned": 250,
+        "total": 9856
       },
       "artillery": {
         "destroyed": 825,
@@ -54,11 +54,11 @@
         "total": 555
       },
       "airdef": {
-        "destroyed": 462,
-        "captured": 60,
-        "damaged": 120,
+        "destroyed": 378,
+        "captured": 50,
+        "damaged": 85,
         "abandoned": 8,
-        "total": 650
+        "total": 521
       },
       "planes": {
         "destroyed": 139,
@@ -96,11 +96,11 @@
         "total": 4204
       },
       "electronics": {
-        "destroyed": 74,
-        "captured": 10,
-        "damaged": 13,
-        "abandoned": 0,
-        "total": 97
+        "destroyed": 834,
+        "captured": 264,
+        "damaged": 147,
+        "abandoned": 36,
+        "total": 1281
       },
       "antitank": {
         "destroyed": 22,
@@ -1685,51 +1685,34 @@
       {
         "date": "2026-06-04",
         "week": 93,
-        "tanks": 0,
-        "afv": 10903,
+        "tanks": 4361,
+        "afv": 9849,
         "artillery": 993,
         "mlrs": 552,
-        "airdef": 649,
+        "airdef": 520,
         "planes": 173,
         "helicopters": 150,
         "uav": 21,
         "naval": 33,
         "vehicles": 4187,
-        "electronics": 97,
+        "electronics": 1280,
         "antitank": 47,
         "support": 712
       },
       {
         "date": "2026-06-09",
         "week": 94,
-        "tanks": 0,
-        "afv": 10911,
+        "tanks": 4364,
+        "afv": 9856,
         "artillery": 994,
         "mlrs": 555,
-        "airdef": 650,
+        "airdef": 521,
         "planes": 173,
         "helicopters": 150,
         "uav": 21,
         "naval": 34,
         "vehicles": 4204,
-        "electronics": 97,
-        "antitank": 47,
-        "support": 715
-      },
-      {
-        "date": "2026-06-17",
-        "week": 95,
-        "tanks": 0,
-        "afv": 10911,
-        "artillery": 994,
-        "mlrs": 555,
-        "airdef": 650,
-        "planes": 173,
-        "helicopters": 150,
-        "uav": 21,
-        "naval": 34,
-        "vehicles": 4204,
-        "electronics": 97,
+        "electronics": 1281,
         "antitank": 47,
         "support": 715
       }
@@ -3286,7 +3269,7 @@
         "date": "2026-06-04",
         "week": 93,
         "tanks": 0,
-        "afv": 1054,
+        "afv": 0,
         "artillery": 0,
         "mlrs": 0,
         "airdef": 0,
@@ -3302,8 +3285,8 @@
       {
         "date": "2026-06-09",
         "week": 94,
-        "tanks": 0,
-        "afv": 8,
+        "tanks": 3,
+        "afv": 7,
         "artillery": 1,
         "mlrs": 3,
         "airdef": 1,
@@ -3312,26 +3295,9 @@
         "uav": 0,
         "naval": 1,
         "vehicles": 17,
-        "electronics": 0,
+        "electronics": 1,
         "antitank": 0,
         "support": 3
-      },
-      {
-        "date": "2026-06-17",
-        "week": 95,
-        "tanks": 0,
-        "afv": 0,
-        "artillery": 0,
-        "mlrs": 0,
-        "airdef": 0,
-        "planes": 0,
-        "helicopters": 0,
-        "uav": 0,
-        "naval": 0,
-        "vehicles": 0,
-        "electronics": 0,
-        "antitank": 0,
-        "support": 0
       }
     ]
   },
@@ -5027,23 +4993,6 @@
         "electronics": 377,
         "antitank": 19,
         "support": 1296
-      },
-      {
-        "date": "2026-06-17",
-        "week": 95,
-        "tanks": 0,
-        "afv": 5771,
-        "artillery": 0,
-        "mlrs": 0,
-        "airdef": 350,
-        "planes": 119,
-        "helicopters": 47,
-        "uav": 1370,
-        "naval": 0,
-        "vehicles": 27,
-        "electronics": 377,
-        "antitank": 19,
-        "support": 1296
       }
     ],
     "weekly_delta": [
@@ -6627,23 +6576,6 @@
         "electronics": 1,
         "antitank": 0,
         "support": 1
-      },
-      {
-        "date": "2026-06-17",
-        "week": 95,
-        "tanks": 0,
-        "afv": 0,
-        "artillery": 0,
-        "mlrs": 0,
-        "airdef": 0,
-        "planes": 0,
-        "helicopters": 0,
-        "uav": 0,
-        "naval": 0,
-        "vehicles": 0,
-        "electronics": 0,
-        "antitank": 0,
-        "support": 0
       }
     ]
   }
