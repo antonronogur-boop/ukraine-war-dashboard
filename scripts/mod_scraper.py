@@ -95,7 +95,7 @@ def fetch_latest() -> dict | None:
         'planes':      extract('planes',      r'Planes\s*[—–-]\s*([\d,\s]+)'),
         'helicopters': extract('helicopters', r'Helicopters\s*[—–-]\s*([\d,\s]+)'),
         'uav':         extract('uav',         r'(?:UAV|[Uu]nmanned aerial|[Dd]rone).*?[—–\-]\s*([\d,\s]+)'),
-        'missiles':    extract('missiles',    r'Cruise missiles\s*[—–-]\s*([\d,\s]+)'),
+        'missiles':    extract('missiles',    r'(?:Cruise\s+)?[Mm]issiles?\s*[—–-]\s*([\d,\s]+)'),
         'ships':       extract('ships',       r'Ships.*?[—–-]\s*([\d,\s]+)'),
         'submarines':  extract('submarines',  r'Submarines\s*[—–-]\s*([\d,\s]+)'),
         'vehicles':    extract('vehicles',    r'Cars and cisterns\s*[—–-]\s*([\d,\s]+)'),
