@@ -4,8 +4,8 @@
     "source_type": "Vizuálisan dokumentált, fotóval igazolt veszteségek",
     "note": "Ez a lista csak azokat a veszteségeket tartalmazza, amelyeket képi bizonyítékkal igazoltak. A valós veszteségek magasabbak lehetnek.",
     "first_week": "2024-07-09",
-    "last_week": "2026-06-09",
-    "total_weeks": 94,
+    "last_week": "2026-06-17",
+    "total_weeks": 95,
     "categories": {
       "tanks": "Harckocsi",
       "afv": "Páncélozott harcjármű",
@@ -21,7 +21,7 @@
       "antitank": "Páncéltörő rendszer",
       "support": "Támogató eszköz"
     },
-    "generated_at": "2026-06-17 12:34"
+    "generated_at": "2026-06-17 12:56"
   },
   "russia": {
     "totals": {
@@ -1715,6 +1715,23 @@
         "electronics": 1281,
         "antitank": 47,
         "support": 715
+      },
+      {
+        "date": "2026-06-17",
+        "week": 95,
+        "tanks": 4364,
+        "afv": 9856,
+        "artillery": 994,
+        "mlrs": 555,
+        "airdef": 521,
+        "planes": 173,
+        "helicopters": 150,
+        "uav": 21,
+        "naval": 34,
+        "vehicles": 4204,
+        "electronics": 1281,
+        "antitank": 47,
+        "support": 715
       }
     ],
     "weekly_delta": [
@@ -3298,6 +3315,23 @@
         "electronics": 1,
         "antitank": 0,
         "support": 3
+      },
+      {
+        "date": "2026-06-17",
+        "week": 95,
+        "tanks": 0,
+        "afv": 0,
+        "artillery": 0,
+        "mlrs": 0,
+        "airdef": 0,
+        "planes": 0,
+        "helicopters": 0,
+        "uav": 0,
+        "naval": 0,
+        "vehicles": 0,
+        "electronics": 0,
+        "antitank": 0,
+        "support": 0
       }
     ]
   },
@@ -4993,6 +5027,23 @@
         "electronics": 377,
         "antitank": 19,
         "support": 1296
+      },
+      {
+        "date": "2026-06-17",
+        "week": 95,
+        "tanks": 0,
+        "afv": 5771,
+        "artillery": 0,
+        "mlrs": 0,
+        "airdef": 350,
+        "planes": 119,
+        "helicopters": 47,
+        "uav": 1370,
+        "naval": 0,
+        "vehicles": 27,
+        "electronics": 377,
+        "antitank": 19,
+        "support": 1296
       }
     ],
     "weekly_delta": [
@@ -6576,6 +6627,23 @@
         "electronics": 1,
         "antitank": 0,
         "support": 1
+      },
+      {
+        "date": "2026-06-17",
+        "week": 95,
+        "tanks": 0,
+        "afv": 0,
+        "artillery": 0,
+        "mlrs": 0,
+        "airdef": 0,
+        "planes": 0,
+        "helicopters": 0,
+        "uav": 0,
+        "naval": 0,
+        "vehicles": 0,
+        "electronics": 0,
+        "antitank": 0,
+        "support": 0
       }
     ]
   }
