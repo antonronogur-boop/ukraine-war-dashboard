@@ -1,28 +1,34 @@
 name: Napi MoD veszteségadat frissítés
 
 on:
-  # Minden nap 07:00 UTC = 09:00 Budapest (nyári idő)
+  # 07:07 UTC = ~09:07 Budapest nyáron, ~08:07 télen
+  # A kerek óra (:00) kerülése csökkenti a GitHub Actions torlódás kockázatát
   schedule:
-    - cron: '0 7 * * *'
+    - cron: '7 7 * * *'
 
-  # Manuálisan is futtatható
   workflow_dispatch:
 
 permissions:
   contents: write
 
+# Megakadályozza, hogy két példány egyszerre fusson és push-ütközést okozzon
+concurrency:
+  group: data-update
+  cancel-in-progress: false
+
 jobs:
   update-mod-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Repo checkout
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Legfrissebb változások beolvasztása (divergált ág megelőzése)
+      - name: Legfrissebb változások beolvasztása
         run: git pull --rebase origin main
 
       - name: Python 3.11 telepítése
@@ -37,12 +43,17 @@ jobs:
         run: mkdir -p data
 
       - name: MoD adat scraping és index.html frissítése
+        id: scrape
         run: python scripts/mod_scraper.py index.html
+
+      - name: Sanity gate — DAILY tömb validáció commit előtt
+        run: python scripts/validate_daily.py index.html
 
       - name: MoD adatok exportálása Excel adatbázisba
         run: python scripts/mod_excel_export.py index.html data/mod_losses.xlsx
 
       - name: Változások commitolása (ha van)
+        id: commit
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Auto-update: napi MoD veszteségadat'
@@ -50,3 +61,10 @@ jobs:
           commit_user_name: 'github-actions[bot]'
           commit_user_email: 'github-actions[bot]@users.noreply.github.com'
           skip_dirty_check: false
+
+      - name: Push retry ha ütközés volt
+        if: failure() && steps.commit.outcome == 'failure'
+        run: |
+          echo "Push ütközés — rebase és újrapróbálkozás..."
+          git pull --rebase origin main
+          git push origin main
