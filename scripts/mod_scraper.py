@@ -56,10 +56,25 @@ def fetch_latest() -> dict | None:
     date_str = f'{year}-{month}-{day}'
     log.info(f'Legfrissebb adat dátuma: {date_str}')
 
+    # FONTOS: a mezőket KIZÁRÓLAG az aktuális nap blokkjában keressük
+    # (a dátum-fejtől a következő "Dynamics of losses" szakaszig).
+    # Ha a TELJES oldal szövegében keresnénk (mint korábban), a regex
+    # véletlenül egy másik, nem-releváns helyen is "egyezhet" — pl. a
+    # diagram-jelmagyarázat összefolyt szövegében
+    # ("...UAVCruise missilesShips (boats)...", szám nélkül utána),
+    # vagy egy kapcsolódó cikk-ajánlóban. Pontosan ez okozta a
+    # "Cruise missiles" → 0 hibát 2026-06-21, 22 és 23-án: a label
+    # kétszer szerepelt a lap szövegében, és a kinyerés rossz helyen
+    # próbált illeszkedni.
+    block_end = text.find('Dynamics of losses', date_match.end())
+    if block_end == -1:
+        block_end = len(text)
+    block_text = text[date_match.start():block_end]
+
     def extract(pattern):
         # Először normál módban próbálkozunk; ha nem sikerül, re.DOTALL-lal
         # (a minfin oldalon egyes mezők értéke más HTML-elembe kerülhet → sortörés)
-        m = re.search(pattern, text) or re.search(pattern, text, re.DOTALL)
+        m = re.search(pattern, block_text) or re.search(pattern, block_text, re.DOTALL)
         if m:
             raw = re.sub(r'[^\d]', '', m.group(1))
             return int(raw) if raw else None
