@@ -116,11 +116,19 @@ def fetch_latest() -> dict | None:
         )
         return None
 
-    # Hiányzó értékek 0-ra állítása
-    for k, v in data.items():
-        if k != 'date' and v is None:
-            data[k] = 0
-            log.warning(f'Hiányzó mező, 0-ra állítva: {k}')
+    # FONTOS: a hiányzó mezőket ITT NEM állítjuk 0-ra!
+    # Közvetlen nyers-HTML vizsgálattal (2026-06-23) bebizonyosodott, hogy a
+    # "Cruise missiles" felirat a minfin oldal teljes szöveges tartalmában
+    # (a BeautifulSoup.get_text()-tel egyenértékű kinyerésben) PONTOSAN
+    # egyszer fordul elő — egy <select> legördülő opciójában —, és SOHA
+    # nincs mellette szám, sem 06-21, sem 06-22, sem 06-23-án. Ez nem
+    # regex-hiba: az adat egyszerűen nincs ott a requests.get()-tel látható
+    # HTML-ben. Emiatt a mezőt None-on hagyjuk, és a run() függvény pótolja
+    # az előző napi (utolsó mentett) értékkel — SOHA nem írunk be hibás 0-t
+    # egy korábban pozitív kumulatív mezőhöz.
+    missing = [k for k, v in data.items() if k != 'date' and v is None]
+    for k in missing:
+        log.warning(f'Hiányzó mező a mai napra (None marad, run() pótolja előző értékkel): {k}')
 
     log.info(f"Kinyert adat: személyi={data['personnel']}, tank={data['tanks']}, uav={data['uav']}")
     return data
@@ -228,6 +236,39 @@ def update_html(html_path: str, new_data: dict) -> bool:
     return True
 
 
+def _get_last_entry(html_path: str) -> dict | None:
+    """
+    Beolvassa az index.html DAILY tömbjének UTOLSÓ (legutóbb mentett)
+    bejegyzését dict-ként. A run() ezt használja arra, hogy egy mai napon
+    sikertelenül kinyert mezőt (None) az előző napi értékkel pótoljon,
+    helyette hogy hibás 0-t írjon be.
+    """
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except OSError as e:
+        log.warning(f'Előző bejegyzés beolvasása sikertelen ({html_path}): {e}')
+        return None
+
+    m = re.search(r'(\{date:"[^"]+",personnel:\d+[^}]+\})\s*\n\s*\];', content)
+    if not m:
+        log.warning('Nem található korábbi bejegyzés a DAILY tömbben — pótlás nem lehetséges.')
+        return None
+
+    entry_str = m.group(1)
+    pairs = re.findall(r'(\w+):"?([^",}]+)"?', entry_str)
+    result = {}
+    for k, v in pairs:
+        if k == 'date':
+            result[k] = v
+        else:
+            try:
+                result[k] = int(v)
+            except ValueError:
+                pass
+    return result
+
+
 def run(html_path: str = None) -> bool:
     if not html_path:
         html_path = DEFAULT_HTML
@@ -235,6 +276,24 @@ def run(html_path: str = None) -> bool:
     data = fetch_latest()
     if not data:
         return False
+
+    # Hiányzó mezők pótlása: SOHA ne kerüljön 0 egy kumulatív mezőbe csak
+    # azért, mert a mai kinyerés sikertelen volt — pontosan ez okozta a
+    # "missiles 4787 → 0" hibát 3 napon át (06-21, 06-22, 06-23), amit a
+    # validate_daily.py helyesen blokkolt. Egy kumulatív veszteségszám
+    # sosem csökkenhet, ezért a tegnapi (utolsó mentett) érték mindig jobb
+    # becslés egy hibás 0-nál — legrosszabb esetben a delta annyi napra 0
+    # marad, amíg az oldal újra megadja az értéket.
+    missing_fields = [k for k, v in data.items() if k != 'date' and v is None]
+    if missing_fields:
+        last = _get_last_entry(html_path)
+        for k in missing_fields:
+            if last and isinstance(last.get(k), int):
+                data[k] = last[k]
+                log.warning(f'{k}: mai kinyerés sikertelen — előző napi érték átvéve ({last[k]}).')
+            else:
+                data[k] = 0
+                log.warning(f'{k}: mai kinyerés sikertelen ÉS nincs előző érték — 0-ra állítva.')
 
     changed = update_html(html_path, data)
     if changed:
