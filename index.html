@@ -266,7 +266,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <button class="filter-btn active" onclick="setTrendFilter(7,this)">7 nap</button>
     <button class="filter-btn" onclick="setTrendFilter(14,this)">14 nap</button>
     <button class="filter-btn" onclick="setTrendFilter(30,this)">30 nap</button>
-    <button class="filter-btn" onclick="setTrendFilter(31,this)">Teljes máj.</button>
+    <button class="filter-btn" onclick="setTrendFilter(9999,this)">Összes</button>
   </div>
   <div class="chart-wrap">
     <div class="chart-title">Napi személyi veszteség + 7 napos gördülő átlag</div>
@@ -2151,7 +2151,9 @@ function exportCSV() {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'ua-war-losses-2026-05.csv'; a.click();
+  const now = new Date();
+  const stamp = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  a.href = url; a.download = 'ua-war-losses-' + stamp + '.csv'; a.click();
   URL.revokeObjectURL(url);
 }
 
