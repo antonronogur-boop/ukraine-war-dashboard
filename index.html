@@ -25,7 +25,7 @@ a{color:#3498db;text-decoration:none;}
 .logo-sub{font-size:11px;color:var(--muted);margin-top:2px;}
 .topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .day-badge{background:rgba(192,57,43,.18);border:1px solid rgba(192,57,43,.5);color:#e74c3c;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
-.updated{font-size:11px;color:var(--muted);}
+.updated{font-size:12px;color:var(--text);font-weight:600;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:4px 10px;}
 .btn-csv{background:rgba(52,152,219,.15);border:1px solid rgba(52,152,219,.4);color:#3498db;padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;}
 .btn-csv:hover{background:rgba(52,152,219,.28);}
 
@@ -127,12 +127,17 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .intensity-tooltip:hover .tt-text{display:block;}
 
 /* RESPONSIVE */
+/* Sticky top positions are set dynamically by updateStickyTops() in JS —
+   the CSS fallbacks below are only for the very first paint before JS runs. */
 @media(max-width:600px){
-  .topbar{padding:10px 14px;}
-  .content{padding:14px;}
-  .nav{top:80px;}
-  .disclaimer-bar{top:52px;}
+  .topbar{padding:8px 12px;}
+  .logo-sub{display:none;}          /* rövidebb topbar mobilon */
+  .logo-text{font-size:13px;}
+  .day-badge{font-size:11px;padding:3px 9px;}
+  .content{padding:12px;}
   .metrics-grid{grid-template-columns:1fr 1fr;}
+  .nav-btn{padding:10px 9px;font-size:12px;}
+  .chart-wrap{padding:12px;}
 }
 
 /* Responsive: prevent chart overflow */
@@ -261,12 +266,25 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 <!-- ===================== TRENDS TAB ===================== -->
 <div id="tab-trends" class="tab-pane">
 <div class="content">
-  <div class="section-title">Trendszűrő</div>
-  <div class="filter-bar" id="trendFilter">
-    <button class="filter-btn active" onclick="setTrendFilter(7,this)">7 nap</button>
-    <button class="filter-btn" onclick="setTrendFilter(14,this)">14 nap</button>
-    <button class="filter-btn" onclick="setTrendFilter(30,this)">30 nap</button>
-    <button class="filter-btn" onclick="setTrendFilter(9999,this)">Összes</button>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;margin-bottom:14px;">
+    <div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Időszak</div>
+      <div class="filter-bar" id="trendFilter" style="margin-bottom:0;">
+        <button class="filter-btn active" onclick="setTrendFilter(7,this)">7 nap</button>
+        <button class="filter-btn" onclick="setTrendFilter(14,this)">14 nap</button>
+        <button class="filter-btn" onclick="setTrendFilter(30,this)">30 nap</button>
+        <button class="filter-btn" onclick="setTrendFilter(9999,this)">Összes</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Kiegészítő mezők</div>
+      <div class="filter-bar" id="trendFieldFilter" style="margin-bottom:0;">
+        <button class="filter-btn active" onclick="setTrendFields('arty_afv',this)">Tüzérség / AFV</button>
+        <button class="filter-btn" onclick="setTrendFields('tanks_missiles',this)">Harckocsi / Rakéta</button>
+        <button class="filter-btn" onclick="setTrendFields('mlrs_airdef',this)">MLRS / Légvédelem</button>
+        <button class="filter-btn" onclick="setTrendFields('robots_vehicles',this)">Robot / Jármű</button>
+      </div>
+    </div>
   </div>
   <div class="chart-wrap">
     <div class="chart-title">Napi személyi veszteség + 7 napos gördülő átlag</div>
@@ -280,14 +298,14 @@ tr:hover td{background:rgba(255,255,255,0.02);}
   </div>
   <div class="grid2">
     <div class="chart-wrap">
-      <div class="chart-title">Napi tüzérségi veszteség</div>
+      <div class="chart-title" id="tr-arty-title">Napi tüzérségi veszteség</div>
       <canvas id="tr-arty-chart" height="160"></canvas>
-      <div class="so-what">A tüzérségi veszteségek önálló trendvonala megmutatja az ellenütegelési harc intenzitásának változását.</div>
+      <div class="so-what" id="tr-arty-note">A tüzérségi veszteségek önálló trendvonala megmutatja az ellenütegelési harc intenzitásának változását.</div>
     </div>
     <div class="chart-wrap">
-      <div class="chart-title">Napi páncélozott harcjármű-veszteség (AFV)</div>
+      <div class="chart-title" id="tr-afv-title">Napi páncélozott harcjármű-veszteség (AFV)</div>
       <canvas id="tr-afv-chart" height="160"></canvas>
-      <div class="so-what">Az IFV/APV veszteségek a páncélos hadviselés intenzitását mutatják — önállóan értelmezve informatívabb, mint a tüzérséggel halmozva.</div>
+      <div class="so-what" id="tr-afv-note">Az IFV/APV veszteségek a páncélos hadviselés intenzitását mutatják — önállóan értelmezve informatívabb, mint a tüzérséggel halmozva.</div>
     </div>
   </div>
 </div>
@@ -505,6 +523,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     </div>
   </div>
 
+  <div class="section-title" style="margin-top:8px;">Harckocsi-dinamika</div>
   <div class="chart-wrap">
     <div class="chart-title">Oroszország vs Ukrajna — harckocsi és páncélozott jármű (heti kumulatív)</div>
     <div class="chart-note">💡 Kattints a jelmagyarázat elemére az adatsor ki-/bekapcsolásához</div>
@@ -517,6 +536,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="so-what">A heti delta megmutatja, <strong>mikor gyorsult fel vagy lassult le</strong> a dokumentált veszteségi ütem. A kumulatív görbe ezt elfedi.</div>
   </div>
 
+  <div class="section-title" style="margin-top:8px;">Forrás-összehasonlítás: MoD vs Oryx</div>
   <div class="chart-wrap">
     <div class="chart-title">Bejelentett ukrán vezérkari számok vs vizuálisan igazolt Oryx-adatok — főkategóriák</div>
     <div style="background:rgba(241,196,15,0.1);border:1px solid rgba(241,196,15,0.3);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#c8a84b;line-height:1.6;">
@@ -527,6 +547,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     <div class="so-what">A bejelentett és vizuálisan igazolt veszteségek között <strong>jellemzően 2–3-szoros különbség</strong> mutatkozik. Ez nem feltétlenül tudatos túlzást jelent — a harctéri azonosítás és dokumentálás módszertani korlátaiból is fakadhat. <strong>Mindkét szám alulbecslés</strong>: az Oryx csak azt rögzíti, amihez kép létezik és nyilvánosan elérhető.</div>
   </div>
 
+  <div class="section-title" style="margin-top:8px;">Heti bontás</div>
   <div class="grid2">
     <div class="chart-wrap">
       <div class="chart-title">Heti új orosz veszteség (Oryx) — harckocsi</div>
@@ -540,6 +561,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     </div>
   </div>
 
+  <div class="section-title" style="margin-top:8px;">Zsákmányolt eszközök</div>
   <div class="chart-wrap">
     <div class="chart-title">Zsákmányolt vs megsemmisített arány — Oroszország</div>
     <div class="chart-note">Az Oryx dokumentál zsákmányolt (captured) eszközöket is — ez egy ritkán látott mutató</div>
@@ -1448,18 +1470,27 @@ function renderOverview() {
     { label:'Harckocsi', val: last.tanks, col:'var(--col-tanks)', delta7: Math.round(avg7t), unit:'/nap' },
     { label:'Páncélozott harcjármű (APV/IFV)', val: last.afv, col:'var(--col-afv)', delta7: Math.round(avg7afv), unit:'/nap' },
     { label:'Tüzérség', val: last.artillery, col:'var(--col-artillery)', delta7: Math.round(avg7a), unit:'/nap' },
-    { label:'Repülő', val: last.planes, col:'var(--col-planes)', delta7: 0, unit:'/nap' },
-    { label:'Helikopter', val: last.helicopters, col:'var(--col-heli)', delta7: 0, unit:'/nap' },
+    { label:'Repülő', val: last.planes, col:'var(--col-planes)', delta7: 0, unit:'/nap', stable: true },
+    { label:'Helikopter', val: last.helicopters, col:'var(--col-heli)', delta7: 0, unit:'/nap', stable: true },
     { label:'UAV drón', val: last.uav, col:'var(--col-uav)', delta7: Math.round(avg7u), unit:'/nap' },
-    { label:'Cirkálórakéta', val: last.missiles, col:'var(--col-missiles)', delta7: 0, unit:'/nap' }
+    { label:'Cirkálórakéta', val: last.missiles, col:'var(--col-missiles)', delta7: 0, unit:'/nap', stable: true }
   ];
-  document.getElementById('metricsGrid').innerHTML = metrics.map(m => `
+  document.getElementById('metricsGrid').innerHTML = metrics.map(m => {
+    let deltaHtml;
+    if (m.delta7 > 0) {
+      deltaHtml = `<span class="up">7n átlag: ${m.delta7}${m.unit}</span>`;
+    } else if (m.stable) {
+      deltaHtml = `<span style="font-size:11px;color:var(--muted);font-style:italic;">változatlan</span>`;
+    } else {
+      deltaHtml = `<span>—</span>`;
+    }
+    return `
     <div class="metric-card" style="--col:${m.col}">
       <div class="metric-label">${m.label}</div>
       <div class="metric-value" style="color:${m.col}">${fmtFull(m.val)}</div>
-      <div class="metric-delta">${m.delta7>0?`<span class="up">7n átlag: ${m.delta7}${m.unit}</span>`:'<span>—</span>'}</div>
-    </div>
-  `).join('');
+      <div class="metric-delta">${deltaHtml}</div>
+    </div>`;
+  }).join('');
 
   // === CHARTS ===
   const labels = DAILY.map(d => dayLabel(d.date));
@@ -1504,7 +1535,35 @@ function renderOverview() {
 //  TRENDS
 // ============================================================
 let currentTrendDays = 7;
+let currentTrendFields = 'arty_afv';
 let trendsCharsInit = false;
+
+const TREND_FIELD_CONFIGS = {
+  arty_afv: {
+    a: { field:'artillery', color:'rgba(243,156,18,0.75)', title:'Napi tüzérségi veszteség',
+         note:'A tüzérségi veszteségek önálló trendvonala megmutatja az ellenütegelési harc intenzitásának változását.' },
+    b: { field:'afv',       color:'rgba(230,126,34,0.75)', title:'Napi páncélozott harcjármű-veszteség (AFV)',
+         note:'Az IFV/APV veszteségek a páncélos hadviselés intenzitását mutatják — önállóan értelmezve informatívabb, mint a tüzérséggel halmozva.' }
+  },
+  tanks_missiles: {
+    a: { field:'tanks',   color:'rgba(231,76,60,0.75)',  title:'Napi harckocsi-veszteség',
+         note:'A harckocsi-veszteség ütemének változása a páncélos ütközetek intenzitását jelzi.' },
+    b: { field:'missiles',color:'rgba(26,188,156,0.75)', title:'Napi cirkálórakéta-veszteség',
+         note:'A rakéta-veszteségek az orosz csapásmérő kampány intenzitását mutatják. Alacsony napi értékek várhatók (ritka bevetés).' }
+  },
+  mlrs_airdef: {
+    a: { field:'mlrs',   color:'rgba(231,76,60,0.75)',  title:'Napi MLRS-veszteség',
+         note:'A többcsövű rakétarendszer veszteségek az orosz tüzérség mélységi csapásmérő képességének csökkenését mutatják.' },
+    b: { field:'airdef', color:'rgba(155,89,182,0.75)', title:'Napi légvédelmi rendszer-veszteség',
+         note:'Az orosz légvédelem erodálódása közvetlen hatással van az ukrán légierő és drónok mozgástérre.' }
+  },
+  robots_vehicles: {
+    a: { field:'robots',   color:'rgba(52,152,219,0.75)',  title:'Napi földi robot rendszer-veszteség',
+         note:'Az orosz robotjármű veszteségek jelzik az autonóm hadviselés bevetési ütemét és pusztítási arányát.' },
+    b: { field:'vehicles', color:'rgba(127,140,141,0.75)', title:'Napi jármű- és tartálykocsi-veszteség',
+         note:'Az utánpótlás és logisztikai járművek veszteségei a hátiszolgálati infrastruktúra elleni csapások sikerességét tükrözik.' }
+  }
+};
 
 function setTrendFilter(days, btn) {
   currentTrendDays = days;
@@ -1513,30 +1572,25 @@ function setTrendFilter(days, btn) {
   renderTrends();
 }
 
+function setTrendFields(key, btn) {
+  currentTrendFields = key;
+  document.querySelectorAll('#trendFieldFilter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTrends();
+}
+
 function renderTrends() {
   // IMPORTANT: deltas must always be derived from the FULL DAILY series first
   // (so every point has its correct previous-day baseline and benefits from
   // gap normalization in dailyDeltas), and only THEN sliced for display.
-  // Slicing DAILY before computing deltas — as the old code did via a local
-  // "sliceDeltas" helper — breaks the baseline of the slice's first element
-  // (it would compare against MONTHLY's last point instead of the actual
-  // previous day) and bypassed the multi-day-gap normalization entirely,
-  // which is exactly what produced the fake single-day spikes.
   const labels = DAILY.slice(-currentTrendDays).map(d => dayLabel(d.date));
 
   const pDFull = dailyDeltas(DAILY, 'personnel');
   const uDFull = dailyDeltas(DAILY, 'uav');
-  const aDFull = dailyDeltas(DAILY, 'artillery');
-  const afDFull = dailyDeltas(DAILY, 'afv');
 
   const pD = pDFull.slice(-currentTrendDays);
   const uD = uDFull.slice(-currentTrendDays);
-  const aD = aDFull.slice(-currentTrendDays);
-  const afD = afDFull.slice(-currentTrendDays);
 
-  // Rolling average computed on the FULL series then sliced, so the edge
-  // points of the visible window still use real prior days (not a truncated,
-  // artificially-shortened window).
   const pAvg = rollingAvg(pDFull, 7).slice(-currentTrendDays);
   const uAvg = rollingAvg(uDFull, 7).slice(-currentTrendDays);
 
@@ -1556,16 +1610,30 @@ function renderTrends() {
     ]
   }, mergeDefaults({ plugins: { legend: { display: true } } }));
 
-  // Artillery
+  // Secondary fields — driven by currentTrendFields
+  const cfg = TREND_FIELD_CONFIGS[currentTrendFields] || TREND_FIELD_CONFIGS.arty_afv;
+  const aFull = dailyDeltas(DAILY, cfg.a.field);
+  const bFull = dailyDeltas(DAILY, cfg.b.field);
+  const aD = aFull.slice(-currentTrendDays);
+  const bD = bFull.slice(-currentTrendDays);
+
+  const titleA = document.getElementById('tr-arty-title');
+  const titleB = document.getElementById('tr-afv-title');
+  const noteA  = document.getElementById('tr-arty-note');
+  const noteB  = document.getElementById('tr-afv-note');
+  if (titleA) titleA.textContent = cfg.a.title;
+  if (titleB) titleB.textContent = cfg.b.title;
+  if (noteA)  noteA.textContent  = cfg.a.note;
+  if (noteB)  noteB.textContent  = cfg.b.note;
+
   makeChart('tr-arty-chart', 'bar', {
     labels,
-    datasets: [{ data: aD, backgroundColor: 'rgba(243,156,18,0.75)', borderRadius: 2 }]
+    datasets: [{ data: aD, backgroundColor: cfg.a.color, borderRadius: 2 }]
   }, { ...baseOpts(), plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '+' + fmt(ctx.parsed.y) + ' db' } } } });
 
-  // AFV
   makeChart('tr-afv-chart', 'bar', {
     labels,
-    datasets: [{ data: afD, backgroundColor: 'rgba(230,126,34,0.75)', borderRadius: 2 }]
+    datasets: [{ data: bD, backgroundColor: cfg.b.color, borderRadius: 2 }]
   }, { ...baseOpts(), plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '+' + fmt(ctx.parsed.y) + ' db' } } } });
 }
 
@@ -1893,7 +1961,7 @@ function renderAnalytics() {
     { period: '2024 jan.–márc.', note: 'Avdijivka eleste, orosz nyomás a Donbaszon', avg: Math.round((442170-359230)/91) },
     { period: '2024 okt.–dec.', note: 'Kurzki hadművelet, fokozódó légi intenzitás', avg: Math.round((789550-653060)/92) },
     { period: '2025 jan.–márc.', note: 'Magas intenzitású frontális nyomás', avg: Math.round((915230-789550)/90) },
-    { period: '2026 máj.', note: 'Jelenlegi időszak (napi adatok elérhetők)', avg: Math.round(avg7) }
+    { period: '2026 máj.–jelen', note: 'Jelenlegi időszak (napi adatok elérhetők)', avg: Math.round(pDeltas.reduce((a,b)=>a+b,0)/pDeltas.length) }
   ];
   document.querySelector('#contextTable tbody').innerHTML = contexts.map(c =>
     `<tr><td>${c.period}</td><td>${c.note}</td><td>${fmtFull(c.avg)}</td></tr>`
@@ -2158,9 +2226,28 @@ function exportCSV() {
 }
 
 // ============================================================
+//  STICKY TOPS — dynamic recalculation
+// ============================================================
+// The topbar, disclaimer-bar and nav stack on top of each other.
+// Their heights vary with content (wrapping on narrow screens),
+// so we compute the real offset chain after every render/resize
+// instead of hard-coding pixel values in CSS.
+function updateStickyTops() {
+  const topbar     = document.querySelector('.topbar');
+  const disclaimer = document.querySelector('.disclaimer-bar');
+  const nav        = document.querySelector('.nav');
+  if (!topbar || !disclaimer || !nav) return;
+  const h1 = topbar.offsetHeight;
+  const h2 = disclaimer.offsetHeight;
+  disclaimer.style.top = h1 + 'px';
+  nav.style.top = (h1 + h2) + 'px';
+}
+
+// ============================================================
 //  INITIAL RENDER
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+  updateStickyTops();
   renderOverview();
 });
 
@@ -2173,6 +2260,7 @@ let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
+    updateStickyTops();
     Object.keys(chartInstances).forEach(id => {
       const canvas = document.getElementById(id);
       if (!canvas) return;
