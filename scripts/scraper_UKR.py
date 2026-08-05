@@ -10,6 +10,9 @@ import sys, os, re, logging
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fetch_with_backoff import fetch  # noqa: E402
 from collections import defaultdict
 from openpyxl import load_workbook, Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -64,8 +67,13 @@ def extract_status(status_part):
 def scrape() -> pd.DataFrame:
     log.info(f"Scraping (UKR): {URL}")
     try:
-        resp = requests.get(URL, timeout=30, headers={'User-Agent': 'Mozilla/5.0'})
-        resp.raise_for_status()
+        # Kozos lekero ujraprobalkozassal — lasd fetch_with_backoff.py.
+        # A 2026-08-04-i futas azert szallt el, mert egyetlen keres ment,
+        # a Google botvedelme pedig 429-cel valaszolt.
+        resp = fetch(URL)
+        if resp is None:
+            log.error("Nem sikerult lekerni az oldalt tobb kiserlet utan sem.")
+            return None
     except Exception as e:
         log.error(f"Hálózati hiba: {e}")
         return None
