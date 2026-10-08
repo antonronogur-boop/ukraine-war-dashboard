@@ -5,7 +5,7 @@ Futtatás:
     python scripts/validate_daily.py index.html
 
 Mit ellenőriz:
-    - Minden kumulatív érték monoton növekvő-e (nem csökken soha)
+    - Minden kumulatív érték monoton növekvő-e (kis adatkorrekciók tolerálva)
     - Nincs-e 0-ra esett kritikus mező ahol a szomszéd magas értéket mutat
     - Az utolsó rekord dátuma nem régebbi-e 3 napnál
 
@@ -29,12 +29,27 @@ CRITICAL_ZERO_CHECK = {
     'uav':        10_000,
     'artillery':   5_000,
     'vehicles':    5_000,
-    'missiles':      500,   # missiles is ide kerül
+    'missiles':      500,
 }
 
 # Mezők amelyekre NEM futtatunk nagy-ugrás ellenőrzést
-# (első megjelenéskor óriási ugrás lehet, pl. robots 0→1306)
 SKIP_SPIKE_CHECK = {'robots'}
+
+# Kis adatkorrekció-tűréshatár mezőnként.
+# A minfin néha utólag 1-5 egységgel javítja saját adatát (pl. planes 444→443).
+# Az ilyen apró csökkenések NEM valódi parse-hibák — csak WARNING-ot írunk,
+# nem blokkoljuk a commit-ot. A küszöbön FELÜLI csökkenés továbbra is ERROR.
+CORRECTION_TOLERANCE = {
+    'planes':      5,
+    'helicopters': 5,
+    'ships':       5,
+    'submarines':  3,
+    'airdef':      5,
+    'mlrs':        5,
+    'special':     5,
+    'robots':     10,
+}
+DEFAULT_TOLERANCE = 0  # tanks, artillery, uav, personnel stb.: szigorú
 
 
 def extract_daily(html_path: str) -> list[dict]:
@@ -84,11 +99,18 @@ def validate(data: list[dict]) -> bool:
             prev_val = prev.get(f, 0) or 0
             delta = cur_val - prev_val
 
-            # Kumulatív érték csökkent — ez mindig hiba
             if delta < 0:
-                errors.append(
-                    f'{date_cur}: {f} CSÖKKENT: {prev_val} → {cur_val} (delta={delta})'
-                )
+                tolerance = CORRECTION_TOLERANCE.get(f, DEFAULT_TOLERANCE)
+                if abs(delta) <= tolerance:
+                    # Kis minfin-korrekciónak tekintjük — figyelmeztetés, nem hiba
+                    warnings.append(
+                        f'{date_cur}: {f} kis korrekció: {prev_val} → {cur_val} '
+                        f'(delta={delta}, tolerált ±{tolerance})'
+                    )
+                else:
+                    errors.append(
+                        f'{date_cur}: {f} CSÖKKENT: {prev_val} → {cur_val} (delta={delta})'
+                    )
 
             # Kritikus mező nullára esett ahol a korábbi érték magas volt
             if f in CRITICAL_ZERO_CHECK:
