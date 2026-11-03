@@ -91,7 +91,21 @@ def parse_latest_dom(html: str):
     day, month, year = m.groups()
     data = {'date': f'{year}-{month}-{day}'}
     change = {}
-    for li in block.select('div.casualties li'):
+    # FONTOS: a minfin kiszolgált HTML-jében a <li class="gold"> napi blokkok
+    # NINCSENEK lezárva, ezért a html.parser az összes későbbi napot az ELSŐ
+    # napba ágyazza. Ha itt egyszerűen minden leszármazott <li>-t olvasnánk,
+    # a mezőket a lista LEGUTOLSÓ (legrégebbi) napja írná felül — pontosan ez
+    # történt 2026-11-03-án (a 10-01-i értékek kerültek a mai dátum alá, a
+    # validate_daily.py pedig helyesen blokkolta). Ezért csak az ELSŐ
+    # div.casualties ELSŐ <ul>-jének KÖZVETLEN <li> gyermekeit olvassuk, és
+    # minden mezőből eltávolítjuk az esetleg beágyazott további napokat.
+    cas = block.find('div', class_='casualties')
+    ul = cas.find('ul') if cas else None
+    if not ul:
+        return None, None
+    for li in ul.find_all('li', recursive=False):
+        for nested in li.find_all(['ul', 'div', 'li']):
+            nested.decompose()
         small = li.find('small')
         delta_txt = small.get_text(strip=True) if small else ''
         if small:
