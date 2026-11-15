@@ -21,11 +21,11 @@
       "antitank": "Páncéltörő rendszer",
       "support": "Támogató / műszaki eszköz"
     },
-    "generated_at": "2026-11-10 15:35",
+    "generated_at": "2026-11-15 17:12",
     "export_version": 2,
     "classification": {
       "russia": {
-        "reference_sheet": "2026-11-10",
+        "reference_sheet": "2026-11-15",
         "reclassified_rows": 11905,
         "unknown_types": 0
       },
